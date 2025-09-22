@@ -1,3 +1,11 @@
 import tensorflow as tf
-print("Num GPUs Available: ", len(tf.config.list_physical_devices('GPU')))
-print("GPUs detected by TensorFlow:", tf.config.list_physical_devices('GPU'))
+
+#load model tflite model
+interpreter = tf.lite.Interpreter(model_path="/Users/ardhyantry/Documents/GitHub/snake-classification/snake_vit_model.tflite")
+interpreter.allocate_tensors()
+input_details = interpreter.get_input_details()
+output_details = interpreter.get_output_details()
+print(input_details)
+print(output_details)
+
+#load image
