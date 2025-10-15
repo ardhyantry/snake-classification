@@ -33,7 +33,7 @@ except:
     print("No GPU available or error setting memory growth")
 
 # Define paths
-DATASET_PATH = 'C:\\Users\\Ardhyan\\Documents\\Code TA\\coba\\dataset ular copy'  # Update if needed
+DATASET_PATH = '/Users/ardhyantry/Documents/GitHub/snake-classification/coba/dataset ular copy'  # Update if needed
 LOCAL_MODEL_PATH = 'C:\\Users\\Ardhyan\\Documents\\Code TA\\vit_base_patch16_224'  # Where model will be saved
 
 # Step 1: Download and save the pretrained model
@@ -231,10 +231,72 @@ def create_datasets_with_batch_size(data_dir, batch_size, train_ratio=0.7, val_r
     val_ds = tf.data.Dataset.from_tensor_slices((val_files, val_labels))
     test_ds = tf.data.Dataset.from_tensor_slices((test_files, test_labels))
     
+    # Define augmentation function for training data
+    def augment_image(image, label):
+        """Apply data augmentation: horizontal flip, rotation, zoom out."""
+        # Note: image is already in channels-first format [3, 224, 224]
+        # Need to transpose to channels-last for TF operations
+        image = tf.transpose(image, perm=[1, 2, 0])  # [3, 224, 224] -> [224, 224, 3]
+        
+        # 1. Random horizontal flip
+        image = tf.image.random_flip_left_right(image)
+        
+        # 2. Random rotation (±20 degrees) using tf.image operations
+        # Generate random angle in radians
+        angle_deg = tf.random.uniform([], -20.0, 20.0)
+        angle_rad = angle_deg * (3.14159265 / 180.0)
+        
+        # Rotate using contrib or raw transformation
+        # Since we can't use keras layers, we'll use a simple rotation via resize and crop
+        # Alternative: skip rotation or use a simpler augmentation
+        # For now, we'll use random crop which gives similar effect
+        if tf.random.uniform([]) > 0.5:  # 50% chance to apply
+            # Random crop and resize back (simulates rotation/zoom effect)
+            crop_size = tf.random.uniform([], 0.85, 0.95)
+            new_h = tf.cast(224.0 * crop_size, tf.int32)
+            new_w = tf.cast(224.0 * crop_size, tf.int32)
+            image = tf.image.random_crop(image, [new_h, new_w, 3])
+            image = tf.image.resize(image, [224, 224])
+        
+        # 3. Random zoom out (scale down to 80-100% of original size)
+        zoom_factor = tf.random.uniform([], 0.8, 1.0)
+        new_h = tf.cast(224.0 * zoom_factor, tf.int32)
+        new_w = tf.cast(224.0 * zoom_factor, tf.int32)
+        
+        # Resize to smaller size (zoom out effect)
+        image = tf.image.resize(image, [new_h, new_w])
+        
+        # Pad back to original size with reflection
+        pad_h = 224 - new_h
+        pad_w = 224 - new_w
+        pad_top = pad_h // 2
+        pad_bottom = pad_h - pad_top
+        pad_left = pad_w // 2
+        pad_right = pad_w - pad_left
+        
+        image = tf.pad(image, [[pad_top, pad_bottom], [pad_left, pad_right], [0, 0]], mode='REFLECT')
+        
+        # 4. Random brightness adjustment
+        image = tf.image.random_brightness(image, 0.2)
+        
+        # 5. Random contrast (bonus augmentation)
+        image = tf.image.random_contrast(image, 0.8, 1.2)
+        
+        # Clip values to valid range (adjusted for ViT normalization which can be negative)
+        image = tf.clip_by_value(image, -3.0, 3.0)
+        
+        # Transpose back to channels-first format [224, 224, 3] -> [3, 224, 224]
+        image = tf.transpose(image, perm=[2, 0, 1])
+        
+        return image, label
+    
     # Apply preprocessing
     train_ds = train_ds.map(preprocess_image, num_parallel_calls=tf.data.AUTOTUNE)
     val_ds = val_ds.map(preprocess_image, num_parallel_calls=tf.data.AUTOTUNE)
     test_ds = test_ds.map(preprocess_image, num_parallel_calls=tf.data.AUTOTUNE)
+    
+    # Apply data augmentation ONLY to training data
+    train_ds = train_ds.map(augment_image, num_parallel_calls=tf.data.AUTOTUNE)
     
     # Memory efficient data loading: no cache, smaller shuffle buffer, prefetch
     train_ds = train_ds.shuffle(100).batch(batch_size).prefetch(tf.data.AUTOTUNE)
@@ -301,7 +363,14 @@ except Exception as e:
     print("Model loaded successfully from local path")
 
 # Configure optimizer with default parameters
-optimizer = tf.keras.optimizers.Adam(learning_rate=best_hps['learning_rate'])
+# Use legacy optimizer for M1/M2 Mac compatibility
+try:
+    optimizer = tf.keras.optimizers.legacy.Adam(learning_rate=best_hps['learning_rate'])
+    print("Using legacy Adam optimizer (M1/M2 Mac optimized)")
+except AttributeError:
+    # Fallback for older TensorFlow versions
+    optimizer = tf.keras.optimizers.Adam(learning_rate=best_hps['learning_rate'])
+    print("Using standard Adam optimizer")
 
 # Compile the model
 model.compile(
