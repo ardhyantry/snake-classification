@@ -14,14 +14,14 @@ np.random.seed(42)
 # Constants
 IMG_SIZE = (224, 224)
 NUM_CLASSES = 2  # Venomous and Non-Venomous
-EPOCHS = 10
+EPOCHS = 20
 # Base hyperparameters (will be tuned)
 BASE_BATCH_SIZE = 16
 BASE_LEARNING_RATE = 2e-5
 
 # Hyperparameter tuning configuration
 TUNER_EPOCHS = 3  # Reduced epochs for faster tuning
-MAX_TRIALS = 10  # Number of different hyperparameter combinations to try
+MAX_TRIALS = 20  # Number of different hyperparameter combinations to try
 
 # Enable memory growth to prevent TF from allocating all GPU memory at once
 try:
@@ -33,7 +33,7 @@ except:
     print("No GPU available or error setting memory growth")
 
 # Define paths
-DATASET_PATH = '/Users/ardhyantry/Documents/GitHub/snake-classification/coba/dataset ular copy'  # Update if needed
+DATASET_PATH = 'C:\\Users\\Ardhyan\\Documents\\GitHub\\snake-classification\\dataset ular'  # Update if needed
 LOCAL_MODEL_PATH = 'C:\\Users\\Ardhyan\\Documents\\Code TA\\vit_base_patch16_224'  # Where model will be saved
 
 # Step 1: Download and save the pretrained model
@@ -149,8 +149,8 @@ def create_datasets_with_batch_size(data_dir, batch_size, train_ratio=0.7, val_r
     assert abs(train_ratio + val_ratio + test_ratio - 1.0) < 1e-10, "Split ratios must add up to 1.0"
     
     # Get image paths and labels
-    venomous_dir = os.path.join(data_dir, 'Venomous')
-    non_venomous_dir = os.path.join(data_dir, 'Non Venomous')  # Note the capitalization
+    venomous_dir = os.path.join(data_dir, 'venomous')
+    non_venomous_dir = os.path.join(data_dir, 'non_venomous')  # Note the capitalization
     
     # Function to verify if a file is a valid image
     def is_valid_image(file_path):
