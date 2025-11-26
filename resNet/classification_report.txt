@@ -1,0 +1,58 @@
+============================================================
+RESNET50V2 - SNAKE CLASSIFICATION TEST SET EVALUATION
+============================================================
+
+Dataset: /Users/ardhyantry/Documents/GitHub/snake-classification/dataset ularBaru
+Model Weights: /Users/ardhyantry/Documents/GitHub/snake-classification/resNet/checkpoints/best_model.weights.h5
+Model Architecture: ResNet50V2 (ImageNet pretrained)
+Test Set Size: 146 images
+  - Venomous: 77
+  - Non-Venomous: 69
+
+Best Hyperparameters:
+  - Learning Rate: 2e-05
+  - Optimizer: Adam
+  - Dropout: 0.2
+  - Backbone Trainable: Yes
+
+============================================================
+CLASSIFICATION REPORT
+============================================================
+              precision    recall  f1-score   support
+
+    Venomous     0.9863    0.9351    0.9600        77
+Non-Venomous     0.9315    0.9855    0.9577        69
+
+    accuracy                         0.9589       146
+   macro avg     0.9589    0.9603    0.9589       146
+weighted avg     0.9604    0.9589    0.9589       146
+
+
+============================================================
+CONFUSION MATRIX
+============================================================
+                  Predicted
+              Venomous  Non-Venomous
+Actual
+Venomous          72          5
+Non-Venomous       1         68
+
+============================================================
+SUMMARY METRICS
+============================================================
+Accuracy:  0.9589 (95.89%)
+Precision: 0.9604 (96.04%)
+Recall:    0.9589 (95.89%)
+F1-Score:  0.9589 (95.89%)
+============================================================
+
+============================================================
+INTERPRETATION
+============================================================
+True Positives (Venomous correctly identified): 72
+True Negatives (Non-Venomous correctly identified): 68
+False Positives (Non-Venomous misclassified as Venomous): 1
+False Negatives (Venomous misclassified as Non-Venomous): 5
+
+Total Correct Predictions: 140/146
+Total Incorrect Predictions: 6/146

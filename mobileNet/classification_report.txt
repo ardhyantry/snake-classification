@@ -1,0 +1,58 @@
+============================================================
+MOBILENETV3LARGE - SNAKE CLASSIFICATION TEST SET EVALUATION
+============================================================
+
+Dataset: /Users/ardhyantry/Documents/GitHub/snake-classification/dataset ularBaru
+Model Weights: /Users/ardhyantry/Documents/GitHub/snake-classification/mobileNet/checkpoints/best_model.weights.h5
+Model Architecture: MobileNetV3Large (ImageNet pretrained)
+Test Set Size: 146 images
+  - Venomous: 77
+  - Non-Venomous: 69
+
+Best Hyperparameters:
+  - Learning Rate: 0.0001
+  - Optimizer: Adam
+  - Dropout: 0.0 (No dropout)
+  - Backbone Trainable: Yes
+
+============================================================
+CLASSIFICATION REPORT
+============================================================
+              precision    recall  f1-score   support
+
+    Venomous     1.0000    0.9221    0.9595        77
+Non-Venomous     0.9200    1.0000    0.9583        69
+
+    accuracy                         0.9589       146
+   macro avg     0.9600    0.9610    0.9589       146
+weighted avg     0.9622    0.9589    0.9589       146
+
+
+============================================================
+CONFUSION MATRIX
+============================================================
+                  Predicted
+              Venomous  Non-Venomous
+Actual
+Venomous          71          6
+Non-Venomous       0         69
+
+============================================================
+SUMMARY METRICS
+============================================================
+Accuracy:  0.9589 (95.89%)
+Precision: 0.9622 (96.22%)
+Recall:    0.9589 (95.89%)
+F1-Score:  0.9589 (95.89%)
+============================================================
+
+============================================================
+INTERPRETATION
+============================================================
+True Positives (Venomous correctly identified): 71
+True Negatives (Non-Venomous correctly identified): 69
+False Positives (Non-Venomous misclassified as Venomous): 0
+False Negatives (Venomous misclassified as Non-Venomous): 6
+
+Total Correct Predictions: 140/146
+Total Incorrect Predictions: 6/146

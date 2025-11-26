@@ -1,0 +1,51 @@
+============================================================
+SNAKE CLASSIFICATION - TEST SET EVALUATION REPORT
+============================================================
+
+Dataset: /Users/ardhyantry/Documents/GitHub/snake-classification/dataset ularBaru
+Model Weights: /Users/ardhyantry/Documents/GitHub/snake-classification/coba/checkpoints/best_model.weights.h5
+Test Set Size: 146 images
+  - Venomous: 77
+  - Non-Venomous: 69
+
+============================================================
+CLASSIFICATION REPORT
+============================================================
+              precision    recall  f1-score   support
+
+    Venomous     0.9747    1.0000    0.9872        77
+Non-Venomous     1.0000    0.9710    0.9853        69
+
+    accuracy                         0.9863       146
+   macro avg     0.9873    0.9855    0.9862       146
+weighted avg     0.9866    0.9863    0.9863       146
+
+
+============================================================
+CONFUSION MATRIX
+============================================================
+                  Predicted
+              Venomous  Non-Venomous
+Actual
+Venomous          77          0
+Non-Venomous       2         67
+
+============================================================
+SUMMARY METRICS
+============================================================
+Accuracy:  0.9863 (98.63%)
+Precision: 0.9866 (98.66%)
+Recall:    0.9863 (98.63%)
+F1-Score:  0.9863 (98.63%)
+============================================================
+
+============================================================
+INTERPRETATION
+============================================================
+True Positives (Venomous correctly identified): 77
+True Negatives (Non-Venomous correctly identified): 67
+False Positives (Non-Venomous misclassified as Venomous): 2
+False Negatives (Venomous misclassified as Non-Venomous): 0
+
+Total Correct Predictions: 144/146
+Total Incorrect Predictions: 2/146

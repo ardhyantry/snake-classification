@@ -1,0 +1,17 @@
+===== BEST HYPERPARAMETERS =====
+Best validation accuracy (tuner): 0.978723406791687
+Learning Rate: 5e-05
+Optimizer: adam
+Dropout: 0.1
+Backbone trainable: 1
+
+===== FINAL EVALUATION ON TEST SET =====
+Test Accuracy: 0.9859
+Test Precision: 0.9706
+Test Recall: 1.0000
+Test F1-Score: 0.9851
+
+===== CONFUSION MATRIX =====
+[[74,  2],
+ [ 0, 66]]
+
