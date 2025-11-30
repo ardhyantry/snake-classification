@@ -14,7 +14,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   File? _image;
-  Uint8List? _imageBytes; // For web platform
+  Uint8List? _imageBytes; 
   String? _prediction;
   double? _confidence;
   bool _isLoading = false;
@@ -37,39 +37,6 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  Future<void> _pickImageFromGallery() async {
-    try {
-      final XFile? image = await _picker.pickImage(
-        source: ImageSource.gallery,
-        maxHeight: 224,
-        maxWidth: 224,
-        imageQuality: 85,
-      );
-      
-      if (image != null) {
-        if (kIsWeb) {
-          final Uint8List bytes = await image.readAsBytes();
-          setState(() {
-            _imageBytes = bytes;
-            _image = null;
-            _prediction = null;
-            _confidence = null;
-          });
-        } else {
-          setState(() {
-            _image = File(image.path);
-            _imageBytes = null;
-            _prediction = null;
-            _confidence = null;
-          });
-        }
-        await _classifyImage();
-      }
-    } catch (e) {
-      _showErrorDialog('Error picking image from gallery: $e');
-    }
-  }
-
   Future<void> _pickImageFromCamera() async {
     try {
       final XFile? image = await _picker.pickImage(
@@ -80,26 +47,56 @@ class _HomeScreenState extends State<HomeScreen> {
       );
       
       if (image != null) {
-        if (kIsWeb) {
-          final Uint8List bytes = await image.readAsBytes();
-          setState(() {
-            _imageBytes = bytes;
-            _image = null;
-            _prediction = null;
-            _confidence = null;
-          });
-        } else {
-          setState(() {
-            _image = File(image.path);
-            _imageBytes = null;
-            _prediction = null;
-            _confidence = null;
-          });
-        }
-        await _classifyImage();
+        await _processImage(image);
       }
     } catch (e) {
-      _showErrorDialog('Error taking photo: $e');
+      _showError('Error taking photo: $e');
+    }
+  }
+
+  Future<void> _pickImageFromGallery() async {
+    try {
+      final XFile? image = await _picker.pickImage(
+        source: ImageSource.gallery,
+        maxHeight: 224,
+        maxWidth: 224,
+        imageQuality: 85,
+      );
+      
+      if (image != null) {
+        await _processImage(image);
+      }
+    } catch (e) {
+      _showError('Error picking image: $e');
+    }
+  }
+
+  Future<void> _processImage(XFile image) async {
+    setState(() {
+      _isLoading = true;
+      _prediction = null;
+      _confidence = null;
+    });
+
+    try {
+      if (kIsWeb) {
+        final Uint8List bytes = await image.readAsBytes();
+        setState(() {
+          _imageBytes = bytes;
+          _image = null;
+        });
+      } else {
+        setState(() {
+          _image = File(image.path);
+          _imageBytes = null;
+        });
+      }
+      await _classifyImage();
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+      _showError('Error processing image: $e');
     }
   }
 
@@ -113,10 +110,8 @@ class _HomeScreenState extends State<HomeScreen> {
     try {
       Map<String, dynamic> result;
       if (kIsWeb && _imageBytes != null) {
-        // For web platform, use bytes
         result = await _classifier.classifyImageFromBytes(_imageBytes!);
       } else if (_image != null) {
-        // For mobile/desktop platforms, use file
         result = await _classifier.classifyImage(_image!);
       } else {
         throw Exception('No image available for classification');
@@ -131,11 +126,11 @@ class _HomeScreenState extends State<HomeScreen> {
       setState(() {
         _isLoading = false;
       });
-      _showErrorDialog('Error classifying image: $e');
+      _showError('Error classifying image: $e');
     }
   }
 
-  void _showErrorDialog(String message) {
+  void _showError(String message) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -153,265 +148,322 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Color _getResultColor() {
-    if (_prediction == null) return Colors.grey;
-    return _prediction!.toLowerCase().contains('venomous') 
-        ? Colors.red 
-        : Colors.green;
-  }
-
-  IconData _getResultIcon() {
-    if (_prediction == null) return Icons.help_outline;
-    return _prediction!.toLowerCase().contains('venomous') 
-        ? Icons.warning 
-        : Icons.check_circle;
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          'Snake Identifier',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        backgroundColor: Colors.green[600],
-        foregroundColor: Colors.white,
-        elevation: 0,
-      ),
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [Colors.green[600]!, Colors.green[50]!],
-          ),
-        ),
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                // Header Card
-                Card(
-                  elevation: 4,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+      backgroundColor: Colors.white,
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            // Header Section - Green Background
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.fromLTRB(24, 60, 24, 40),
+              decoration: const BoxDecoration(
+                color: Color(0xFFDDEEDC),
+              ),
+              child: Column(
+                children: [
+                  const Text(
+                    'Snake Identifier',
+                    style: TextStyle(
+                      fontSize: 32,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF0F4D2C),
+                    ),
                   ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
+                  const SizedBox(height: 12),
+                  const Text(
+                    'Identify venomous and non-venomous snakes using AI-powered image recognition',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Color(0xFF4A5F4A),
+                      height: 1.4,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // Main Content Container
+            Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Column(
+                children: [
+                  // Main Action Container
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(32),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFE4E4E4),
+                      borderRadius: BorderRadius.circular(24),
+                    ),
                     child: Column(
                       children: [
-                        Icon(
-                          Icons.camera_alt,
-                          size: 48,
-                          color: Colors.green[600],
-                        ),
-                        const SizedBox(height: 8),
                         const Text(
-                          'Identifikasi Ular',
-                          style: TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'Ambil foto atau pilih dari galeri untuk mengidentifikasi jenis ular',
+                          'Choose an option to get started',
                           textAlign: TextAlign.center,
                           style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w500,
+                            color: Color(0xFF333333),
+                          ),
+                        ),
+                        const SizedBox(height: 32),
+
+                        // Take a Photo Button
+                        SizedBox(
+                          width: double.infinity,
+                          height: 58,
+                          child: ElevatedButton(
+                            onPressed: _isLoading ? null : _pickImageFromCamera,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF3D8B4E),
+                              foregroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              elevation: 2,
+                              disabledBackgroundColor: Colors.grey,
+                            ),
+                            child: const Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.camera_alt, size: 24),
+                                SizedBox(width: 12),
+                                Text(
+                                  'Take a photo',
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+
+                        const SizedBox(height: 20),
+
+                        // OR Text
+                        const Text(
+                          'OR',
+                          style: TextStyle(
                             fontSize: 14,
-                            color: Colors.grey[600],
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF3D8B4E),
+                          ),
+                        ),
+
+                        const SizedBox(height: 20),
+
+                        // Upload from Gallery Button
+                        SizedBox(
+                          width: double.infinity,
+                          height: 58,
+                          child: ElevatedButton(
+                            onPressed: _isLoading ? null : _pickImageFromGallery,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF607065),
+                              foregroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              elevation: 2,
+                              disabledBackgroundColor: Colors.grey,
+                            ),
+                            child: const Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.upload_file, size: 24),
+                                SizedBox(width: 12),
+                                Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Upload From',
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                    Text(
+                                      'Gallery',
+                                      style: TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       ],
                     ),
                   ),
-                ),
-                
-                const SizedBox(height: 20),
-                
-                // Image Display Area
-                Expanded(
-                  flex: 3,
-                  child: Card(
-                    elevation: 4,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Container(
+
+                  const SizedBox(height: 32),
+
+                  // Image Preview (if available)
+                  if (_image != null || _imageBytes != null) ...[
+                    Container(
+                      width: double.infinity,
+                      height: 300,
                       decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(12),
-                        color: Colors.grey[100],
+                        borderRadius: BorderRadius.circular(16),
+                        color: Colors.grey[200],
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.grey.withOpacity(0.3),
+                            spreadRadius: 2,
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
                       ),
-                      child: _image == null && _imageBytes == null
-                          ? const Center(
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(
-                                    Icons.image_outlined,
-                                    size: 64,
-                                    color: Colors.grey,
-                                  ),
-                                  SizedBox(height: 16),
-                                  Text(
-                                    'Belum ada gambar dipilih',
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      color: Colors.grey,
-                                    ),
-                                  ),
-                                  SizedBox(height: 8),
-                                  Text(
-                                    'Pilih gambar untuk memulai identifikasi',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: Colors.grey,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            )
-                          : ClipRRect(
-                              borderRadius: BorderRadius.circular(12),
-                              child: kIsWeb && _imageBytes != null
-                                  ? Image.memory(
-                                      _imageBytes!,
-                                      fit: BoxFit.cover,
-                                      width: double.infinity,
-                                      height: double.infinity,
-                                    )
-                                  : _image != null
-                                      ? Image.file(
-                                          _image!,
-                                          fit: BoxFit.cover,
-                                          width: double.infinity,
-                                          height: double.infinity,
-                                        )
-                                      : Container(
-                                          color: Colors.grey[300],
-                                          child: Center(
-                                            child: Text('Image loading error'),
-                                          ),
-                                        ),
-                            ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(16),
+                        child: kIsWeb && _imageBytes != null
+                            ? Image.memory(_imageBytes!, fit: BoxFit.cover)
+                            : _image != null
+                                ? Image.file(_image!, fit: BoxFit.cover)
+                                : const SizedBox(),
+                      ),
                     ),
-                  ),
-                ),
-                
-                const SizedBox(height: 20),
-                
-                // Results Area
-                if (_isLoading || _prediction != null)
-                  Card(
-                    elevation: 4,
-                    shape: RoundedRectangleBorder(
+                    const SizedBox(height: 24),
+                  ],
+
+                  // Loading or Result
+                  if (_isLoading)
+                    Container(
+                      padding: const EdgeInsets.all(24),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.grey.withOpacity(0.2),
+                            spreadRadius: 2,
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: const Column(
+                        children: [
+                          CircularProgressIndicator(
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              Color(0xFF3D8B4E),
+                            ),
+                          ),
+                          SizedBox(height: 16),
+                          Text(
+                            'Analyzing image...',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                  if (_prediction != null && !_isLoading) ...[
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(24),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.grey.withOpacity(0.2),
+                            spreadRadius: 2,
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        children: [
+                          Icon(
+                            _prediction!.toLowerCase().contains('venomous')
+                                ? Icons.warning_rounded
+                                : Icons.check_circle_rounded,
+                            size: 64,
+                            color: _prediction!.toLowerCase().contains('venomous')
+                                ? Colors.red
+                                : const Color(0xFF3D8B4E),
+                          ),
+                          const SizedBox(height: 16),
+                          const Text(
+                            'Result:',
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: Colors.grey,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            _prediction!,
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                              color: _prediction!.toLowerCase().contains('venomous')
+                                  ? Colors.red
+                                  : const Color(0xFF3D8B4E),
+                            ),
+                          ),
+                          if (_confidence != null) ...[
+                            const SizedBox(height: 12),
+                            Text(
+                              'Confidence: ${(_confidence! * 100).toStringAsFixed(1)}%',
+                              style: const TextStyle(
+                                fontSize: 16,
+                                color: Colors.grey,
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                  ],
+
+                  // Bottom Info Box
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 16,
+                    ),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFDDDDDD),
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: _isLoading
-                          ? const Column(
-                              children: [
-                                CircularProgressIndicator(),
-                                SizedBox(height: 16),
-                                Text(
-                                  'Menganalisis gambar...',
-                                  style: TextStyle(fontSize: 16),
-                                ),
-                              ],
-                            )
-                          : Column(
-                              children: [
-                                Icon(
-                                  _getResultIcon(),
-                                  size: 48,
-                                  color: _getResultColor(),
-                                ),
-                                const SizedBox(height: 12),
-                                Text(
-                                  'Hasil Identifikasi:',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    color: Colors.grey[600],
-                                  ),
-                                ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  _prediction ?? '',
-                                  style: TextStyle(
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.bold,
-                                    color: _getResultColor(),
-                                  ),
-                                  textAlign: TextAlign.center,
-                                ),
-                                if (_confidence != null) ...[
-                                  const SizedBox(height: 8),
-                                  Text(
-                                    'Confidence: ${(_confidence! * 100).toStringAsFixed(1)}%',
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      color: Colors.grey[600],
-                                    ),
-                                  ),
-                                ],
-                              ],
-                            ),
+                    child: const Text(
+                      'For best results, ensure the snake is clearly visible and well-lit',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: Color(0xFF555555),
+                        height: 1.4,
+                      ),
                     ),
                   ),
-                
-                const SizedBox(height: 20),
-                
-                // Action Buttons
-                Row(
-                  children: [
-                    Expanded(
-                      child: ElevatedButton.icon(
-                        onPressed: _pickImageFromCamera,
-                        icon: const Icon(Icons.camera_alt),
-                        label: const Text('Kamera'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.green[600],
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: ElevatedButton.icon(
-                        onPressed: _pickImageFromGallery,
-                        icon: const Icon(Icons.photo_library),
-                        label: const Text('Galeri'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.green[600],
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
+
+                  const SizedBox(height: 24),
+                ],
+              ),
             ),
-          ),
+          ],
         ),
       ),
     );
-  }
-
-  @override
-  void dispose() {
-    _classifier.dispose();
-    super.dispose();
   }
 }

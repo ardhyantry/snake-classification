@@ -18,6 +18,11 @@ class SnakeClassifier {
   // Model input shape (adjust based on your model)
   static const int inputSize = 224;
   static const int numChannels = 3;
+  
+  // ViT Image Processor configuration
+  static const double rescaleFactor = 0.00392156862745098; // 1/255
+  static const List<double> imageMean = [0.5, 0.5, 0.5];
+  static const List<double> imageStd = [0.5, 0.5, 0.5];
 
   Future<void> loadModel() async {
     try {
@@ -184,15 +189,25 @@ class SnakeClassifier {
     final buffer = Float32List.view(convertedBytes.buffer);
     int pixelIndex = 0;
 
+    print('\n=== ViT PREPROCESSING ===');
+    print('Rescale factor: $rescaleFactor');
+    print('Image mean: $imageMean');
+    print('Image std: $imageStd');
+    print('========================\n');
+
     for (int i = 0; i < inputSize; i++) {
       for (int j = 0; j < inputSize; j++) {
         final pixel = image.getPixel(j, i);
         
-        // Normalize pixel values to [0, 1] range
-        // Adjust normalization based on your model's requirements
-        buffer[pixelIndex++] = pixel.r / 255.0;
-        buffer[pixelIndex++] = pixel.g / 255.0;
-        buffer[pixelIndex++] = pixel.b / 255.0;
+        // Step 1: Rescale pixel values (divide by 255)
+        double r = pixel.r * rescaleFactor;
+        double g = pixel.g * rescaleFactor;
+        double b = pixel.b * rescaleFactor;
+        
+        // Step 2: Normalize with mean and std: (pixel - mean) / std
+        buffer[pixelIndex++] = (r - imageMean[0]) / imageStd[0];
+        buffer[pixelIndex++] = (g - imageMean[1]) / imageStd[1];
+        buffer[pixelIndex++] = (b - imageMean[2]) / imageStd[2];
       }
     }
 
