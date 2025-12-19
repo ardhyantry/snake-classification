@@ -141,14 +141,14 @@ class SnakeClassifier {
 
   Future<Map<String, dynamic>> _runTFLiteInference(img.Image image) async {
     try {
-      // Convert image to input tensor
-      final Float32List input = _imageToByteList(image);
+      // Convert image to input tensor with shape [1, 3, 224, 224] (channels first for ViT)
+      final input = _imageToChannelsFirst(image);
 
       // Prepare output tensor - create 2D list for TensorFlow Lite
       final output = List.generate(1, (index) => List.filled(_labels.length, 0.0));
 
       // Run inference with proper tensor shapes
-      _interpreter!.run([input], output);
+      _interpreter!.run(input, output);
 
       // Get prediction results from first batch
       final List<double> probabilities = List<double>.from(output[0]);
@@ -212,6 +212,47 @@ class SnakeClassifier {
     }
 
     return convertedBytes;
+  }
+
+  /// Convert image to channels-first format [1, 3, 224, 224] for ViT model
+  List<List<List<List<double>>>> _imageToChannelsFirst(img.Image image) {
+    // Create 4D tensor with shape [1, 3, 224, 224]
+    final tensor = List.generate(
+      1, // batch size
+      (_) => List.generate(
+        numChannels, // channels (R, G, B)
+        (_) => List.generate(
+          inputSize, // height
+          (_) => List.filled(inputSize, 0.0), // width
+        ),
+      ),
+    );
+
+    print('\n=== ViT PREPROCESSING (Channels First) ===');
+    print('Input shape: [1, 3, 224, 224]');
+    print('Rescale factor: $rescaleFactor');
+    print('Image mean: $imageMean');
+    print('Image std: $imageStd');
+    print('==========================================\n');
+
+    for (int h = 0; h < inputSize; h++) {
+      for (int w = 0; w < inputSize; w++) {
+        final pixel = image.getPixel(w, h);
+        
+        // Step 1: Rescale pixel values (divide by 255)
+        double r = pixel.r * rescaleFactor;
+        double g = pixel.g * rescaleFactor;
+        double b = pixel.b * rescaleFactor;
+        
+        // Step 2: Normalize with mean and std: (pixel - mean) / std
+        // Channels first format: tensor[batch][channel][height][width]
+        tensor[0][0][h][w] = (r - imageMean[0]) / imageStd[0]; // Red channel
+        tensor[0][1][h][w] = (g - imageMean[1]) / imageStd[1]; // Green channel
+        tensor[0][2][h][w] = (b - imageMean[2]) / imageStd[2]; // Blue channel
+      }
+    }
+
+    return tensor;
   }
 
   Map<String, dynamic> _simulateInference(img.Image image) {
