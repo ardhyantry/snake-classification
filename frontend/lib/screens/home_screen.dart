@@ -41,9 +41,8 @@ class _HomeScreenState extends State<HomeScreen> {
     try {
       final XFile? image = await _picker.pickImage(
         source: ImageSource.camera,
-        maxHeight: 224,
-        maxWidth: 224,
-        imageQuality: 85,
+        // No size restrictions - keep original quality for UI display
+        // Preprocessing to 224x224 is done internally by the classifier
       );
       
       if (image != null) {
@@ -58,9 +57,8 @@ class _HomeScreenState extends State<HomeScreen> {
     try {
       final XFile? image = await _picker.pickImage(
         source: ImageSource.gallery,
-        maxHeight: 224,
-        maxWidth: 224,
-        imageQuality: 85,
+        // No size restrictions - keep original quality for UI display
+        // Preprocessing to 224x224 is done internally by the classifier
       );
       
       if (image != null) {

@@ -1,6 +1,5 @@
 import 'dart:io';
 import 'dart:typed_data';
-import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:image/image.dart' as img;
@@ -89,14 +88,11 @@ class SnakeClassifier {
         height: inputSize,
       );
 
-      // Try to use real TensorFlow Lite model if available and not on web
+      // Use TensorFlow Lite model
       if (_interpreter != null && !kIsWeb) {
         return await _runTFLiteInference(resizedImage);
       } else {
-        // Fallback to simulation for web platform or when TFLite model is not available
-        String reason = kIsWeb ? 'Web platform' : 'TFLite model not available';
-        print('Using simulated classification ($reason)');
-        return _simulateInference(resizedImage);
+        throw Exception('TFLite model not available on this platform');
       }
     } catch (e) {
       print('Error during image classification: $e');
@@ -124,14 +120,11 @@ class SnakeClassifier {
         height: inputSize,
       );
 
-      // Try to use real TensorFlow Lite model if available and not on web
+      // Use TensorFlow Lite model
       if (_interpreter != null && !kIsWeb) {
         return await _runTFLiteInference(resizedImage);
       } else {
-        // Fallback to simulation for web platform or when TFLite model is not available
-        String reason = kIsWeb ? 'Web platform' : 'TFLite model not available';
-        print('Using simulated classification ($reason)');
-        return _simulateInference(resizedImage);
+        throw Exception('TFLite model not available on this platform');
       }
     } catch (e) {
       print('Error during image classification: $e');
@@ -179,8 +172,8 @@ class SnakeClassifier {
         'method': 'TensorFlow Lite',
       };
     } catch (e) {
-      print('TFLite inference failed: $e, falling back to simulation');
-      return _simulateInference(image);
+      print('TFLite inference failed: $e');
+      rethrow;
     }
   }
 
@@ -253,68 +246,6 @@ class SnakeClassifier {
     }
 
     return tensor;
-  }
-
-  Map<String, dynamic> _simulateInference(img.Image image) {
-    // This is a fallback simulation when TFLite model is not available
-    // In production, always use the real TensorFlow Lite model
-    
-    // Calculate some basic image features for simulation
-    int totalRed = 0, totalGreen = 0, totalBlue = 0;
-    int pixelCount = 0;
-    
-    for (int y = 0; y < image.height; y++) {
-      for (int x = 0; x < image.width; x++) {
-        final pixel = image.getPixel(x, y);
-        totalRed += pixel.r.toInt();
-        totalGreen += pixel.g.toInt();
-        totalBlue += pixel.b.toInt();
-        pixelCount++;
-      }
-    }
-    
-    // Calculate average colors
-    double avgRed = totalRed / pixelCount;
-    double avgGreen = totalGreen / pixelCount;
-    double avgBlue = totalBlue / pixelCount;
-    
-    // Simple heuristic for demonstration (not actual snake detection)
-    // This is just for UI testing - replace with real model
-    double brightness = (avgRed + avgGreen + avgBlue) / 3;
-    double colorVariance = ((avgRed - brightness).abs() + 
-                           (avgGreen - brightness).abs() + 
-                           (avgBlue - brightness).abs()) / 3;
-    
-    // Simulate probability based on image characteristics
-    Random random = Random();
-    double baseProb = (brightness + colorVariance) / 500.0;
-    baseProb = baseProb.clamp(0.1, 0.9);
-    
-    // Add some randomness for simulation
-    double venomousProb = baseProb + (random.nextDouble() - 0.5) * 0.3;
-    venomousProb = venomousProb.clamp(0.1, 0.9);
-    double nonVenomousProb = 1.0 - venomousProb;
-
-    List<double> probabilities = [venomousProb, nonVenomousProb];
-    
-    // Find the class with highest probability
-    int maxIndex = venomousProb > nonVenomousProb ? 0 : 1;
-    double maxProbability = probabilities[maxIndex];
-
-    final String predictedLabel = maxIndex < _labels.length 
-        ? _labels[maxIndex] 
-        : 'Unknown';
-
-    return {
-      'label': predictedLabel,
-      'confidence': maxProbability,
-      'probabilities': probabilities,
-      'all_results': List.generate(_labels.length, (index) => {
-        'label': _labels[index],
-        'confidence': probabilities[index],
-      }),
-      'note': 'This is a simulated result for demonstration. Replace with actual TensorFlow Lite model.',
-    };
   }
 
   void dispose() {
