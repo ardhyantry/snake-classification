@@ -391,13 +391,13 @@ class _HomeScreenState extends State<HomeScreen> {
                       child: Column(
                         children: [
                           Icon(
-                            _prediction!.toLowerCase().contains('venomous')
-                                ? Icons.warning_rounded
-                                : Icons.check_circle_rounded,
+                            _prediction!.toLowerCase().contains('non')
+                                ? Icons.check_circle_rounded
+                                : Icons.warning_rounded,
                             size: 64,
-                            color: _prediction!.toLowerCase().contains('venomous')
-                                ? Colors.red
-                                : const Color(0xFF3D8B4E),
+                            color: _prediction!.toLowerCase().contains('non')
+                                ? const Color(0xFF3D8B4E)
+                                : Colors.red,
                           ),
                           const SizedBox(height: 16),
                           const Text(
@@ -414,9 +414,9 @@ class _HomeScreenState extends State<HomeScreen> {
                             style: TextStyle(
                               fontSize: 24,
                               fontWeight: FontWeight.bold,
-                              color: _prediction!.toLowerCase().contains('venomous')
-                                  ? Colors.red
-                                  : const Color(0xFF3D8B4E),
+                              color: _prediction!.toLowerCase().contains('non')
+                                  ? const Color(0xFF3D8B4E)
+                                  : Colors.red,
                             ),
                           ),
                           if (_confidence != null) ...[
