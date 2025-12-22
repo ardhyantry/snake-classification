@@ -4,7 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:image/image.dart' as img;
 
-// Conditional import untuk TensorFlow Lite
+// Import kondisional untuk TensorFlow Lite
 // Hanya import tflite_flutter jika tidak di web
 // ignore: avoid_web_libraries_in_flutter
 import 'package:tflite_flutter/tflite_flutter.dart' if (dart.library.html) 'stub_tflite.dart';
@@ -14,18 +14,18 @@ class SnakeClassifier {
   late List<String> _labels;
   bool _isModelLoaded = false;
 
-  // Model input shape (adjust based on your model)
+  // Ukuran input model (sesuaikan dengan model Anda)
   static const int inputSize = 224;
   static const int numChannels = 3;
   
-  // ViT Image Processor configuration
+  // Konfigurasi ViT Image Processor
   static const double rescaleFactor = 0.00392156862745098; // 1/255
   static const List<double> imageMean = [0.5, 0.5, 0.5];
   static const List<double> imageStd = [0.5, 0.5, 0.5];
 
   Future<void> loadModel() async {
     try {
-      // Check if running on web platform
+      // Periksa apakah berjalan di platform web
       if (kIsWeb) {
         print('Running on web platform - TensorFlow Lite not supported');
         print('Using simulated model for demonstration');
@@ -34,10 +34,10 @@ class SnakeClassifier {
         return;
       }
       
-      // Load the TFLite model for non-web platforms
+      // Muat model TFLite untuk platform non-web
       _interpreter = await Interpreter.fromAsset('assets/models/snake_vit_model.tflite');
       
-      // Load labels
+      // Muat label
       _labels = await _loadLabels();
       
       _isModelLoaded = true;
@@ -50,9 +50,9 @@ class SnakeClassifier {
       print('Error loading TFLite model: $e');
       print('Using fallback simulated model for demonstration');
       
-      // Load labels even if model fails
+      // Muat label meskipun model gagal
       _labels = await _loadLabels();
-      _isModelLoaded = true; // Allow app to continue with simulation
+      _isModelLoaded = true; // Izinkan aplikasi melanjutkan dengan simulasi
     }
   }
 
@@ -62,7 +62,7 @@ class SnakeClassifier {
       return labelData.split('\n').where((label) => label.isNotEmpty).toList();
     } catch (e) {
       print('Error loading labels: $e');
-      // Return default labels if file doesn't exist
+      // Kembalikan label default jika file tidak ada
       return ['Venomous Snake', 'Non-Venomous Snake'];
     }
   }
@@ -73,7 +73,7 @@ class SnakeClassifier {
     }
 
     try {
-      // Read and preprocess the image
+      // Baca dan preproses gambar
       final Uint8List imageBytes = await imageFile.readAsBytes();
       final img.Image? image = img.decodeImage(imageBytes);
       
@@ -81,14 +81,14 @@ class SnakeClassifier {
         throw Exception('Failed to decode image');
       }
 
-      // Resize image to model input size
+      // Ubah ukuran gambar ke ukuran input model
       final img.Image resizedImage = img.copyResize(
         image,
         width: inputSize,
         height: inputSize,
       );
 
-      // Use TensorFlow Lite model
+      // Gunakan model TensorFlow Lite
       if (_interpreter != null && !kIsWeb) {
         return await _runTFLiteInference(resizedImage);
       } else {
@@ -106,21 +106,21 @@ class SnakeClassifier {
     }
 
     try {
-      // Decode image from bytes
+      // Dekode gambar dari bytes
       final img.Image? image = img.decodeImage(imageBytes);
       
       if (image == null) {
         throw Exception('Failed to decode image');
       }
 
-      // Resize image to model input size
+      // Ubah ukuran gambar ke ukuran input model
       final img.Image resizedImage = img.copyResize(
         image,
         width: inputSize,
         height: inputSize,
       );
 
-      // Use TensorFlow Lite model
+      // Gunakan model TensorFlow Lite
       if (_interpreter != null && !kIsWeb) {
         return await _runTFLiteInference(resizedImage);
       } else {
@@ -134,19 +134,19 @@ class SnakeClassifier {
 
   Future<Map<String, dynamic>> _runTFLiteInference(img.Image image) async {
     try {
-      // Convert image to input tensor with shape [1, 3, 224, 224] (channels first for ViT)
+      // Konversi gambar ke tensor input dengan bentuk [1, 3, 224, 224] (channels first untuk ViT)
       final input = _imageToChannelsFirst(image);
 
-      // Prepare output tensor - create 2D list for TensorFlow Lite
+      // Siapkan tensor output - buat list 2D untuk TensorFlow Lite
       final output = List.generate(1, (index) => List.filled(_labels.length, 0.0));
 
-      // Run inference with proper tensor shapes
+      // Jalankan inferensi dengan bentuk tensor yang benar
       _interpreter!.run(input, output);
 
-      // Get prediction results from first batch
+      // Dapatkan hasil prediksi dari batch pertama
       final List<double> probabilities = List<double>.from(output[0]);
       
-      // Find the class with highest probability
+      // Temukan kelas dengan probabilitas tertinggi
       int maxIndex = 0;
       double maxProbability = probabilities[0];
       
@@ -207,41 +207,41 @@ class SnakeClassifier {
     return convertedBytes;
   }
 
-  /// Convert image to channels-first format [1, 3, 224, 224] for ViT model
+  /// Konversi gambar ke format channels-first [1, 3, 224, 224] untuk model ViT
   List<List<List<List<double>>>> _imageToChannelsFirst(img.Image image) {
-    // Create 4D tensor with shape [1, 3, 224, 224]
+    // Buat tensor 4D dengan bentuk [1, 3, 224, 224]
     final tensor = List.generate(
-      1, // batch size
+      1, // ukuran batch
       (_) => List.generate(
-        numChannels, // channels (R, G, B)
+        numChannels, // channel (R, G, B)
         (_) => List.generate(
-          inputSize, // height
-          (_) => List.filled(inputSize, 0.0), // width
+          inputSize, // tinggi
+          (_) => List.filled(inputSize, 0.0), // lebar
         ),
       ),
     );
 
-    print('\n=== ViT PREPROCESSING (Channels First) ===');
-    print('Input shape: [1, 3, 224, 224]');
-    print('Rescale factor: $rescaleFactor');
-    print('Image mean: $imageMean');
-    print('Image std: $imageStd');
+    print('\n=== PREPROCESSING ViT (Channels First) ===');
+    print('Bentuk input: [1, 3, 224, 224]');
+    print('Faktor rescale: $rescaleFactor');
+    print('Mean gambar: $imageMean');
+    print('Std gambar: $imageStd');
     print('==========================================\n');
 
     for (int h = 0; h < inputSize; h++) {
       for (int w = 0; w < inputSize; w++) {
         final pixel = image.getPixel(w, h);
         
-        // Step 1: Rescale pixel values (divide by 255)
+        // Langkah 1: Rescale nilai pixel (bagi dengan 255)
         double r = pixel.r * rescaleFactor;
         double g = pixel.g * rescaleFactor;
         double b = pixel.b * rescaleFactor;
         
-        // Step 2: Normalize with mean and std: (pixel - mean) / std
-        // Channels first format: tensor[batch][channel][height][width]
-        tensor[0][0][h][w] = (r - imageMean[0]) / imageStd[0]; // Red channel
-        tensor[0][1][h][w] = (g - imageMean[1]) / imageStd[1]; // Green channel
-        tensor[0][2][h][w] = (b - imageMean[2]) / imageStd[2]; // Blue channel
+        // Langkah 2: Normalisasi dengan mean dan std: (pixel - mean) / std
+        // Format channels first: tensor[batch][channel][tinggi][lebar]
+        tensor[0][0][h][w] = (r - imageMean[0]) / imageStd[0]; // Channel merah
+        tensor[0][1][h][w] = (g - imageMean[1]) / imageStd[1]; // Channel hijau
+        tensor[0][2][h][w] = (b - imageMean[2]) / imageStd[2]; // Channel biru
       }
     }
 

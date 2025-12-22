@@ -41,8 +41,8 @@ class _HomeScreenState extends State<HomeScreen> {
     try {
       final XFile? image = await _picker.pickImage(
         source: ImageSource.camera,
-        // No size restrictions - keep original quality for UI display
-        // Preprocessing to 224x224 is done internally by the classifier
+        // Tanpa batasan ukuran - pertahankan kualitas asli untuk tampilan UI
+        // Preprocessing ke 224x224 dilakukan secara internal oleh classifier
       );
       
       if (image != null) {
@@ -57,8 +57,8 @@ class _HomeScreenState extends State<HomeScreen> {
     try {
       final XFile? image = await _picker.pickImage(
         source: ImageSource.gallery,
-        // No size restrictions - keep original quality for UI display
-        // Preprocessing to 224x224 is done internally by the classifier
+        // Tanpa batasan ukuran - pertahankan kualitas asli untuk tampilan UI
+        // Preprocessing ke 224x224 dilakukan secara internal oleh classifier
       );
       
       if (image != null) {
@@ -153,7 +153,7 @@ class _HomeScreenState extends State<HomeScreen> {
       body: SingleChildScrollView(
         child: Column(
           children: [
-            // Header Section - Green Background
+            // Bagian Header - Latar Belakang Hijau
             Container(
               width: double.infinity,
               padding: const EdgeInsets.fromLTRB(24, 60, 24, 40),
@@ -184,12 +184,12 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
 
-            // Main Content Container
+            // Kontainer Konten Utama
             Padding(
               padding: const EdgeInsets.all(24.0),
               child: Column(
                 children: [
-                  // Main Action Container
+                  // Kontainer Aksi Utama
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.all(32),
@@ -199,18 +199,20 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                     child: Column(
                       children: [
-                        const Text(
-                          'Choose an option to get started',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w500,
-                            color: Color(0xFF333333),
+                          const Flexible(
+                            child: Text(
+                              'Choose an option to get started',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w500,
+                                color: Color(0xFF333333),
+                              ),
+                            ),
                           ),
-                        ),
                         const SizedBox(height: 32),
 
-                        // Take a Photo Button
+                        // Tombol Ambil Foto
                         SizedBox(
                           width: double.infinity,
                           height: 58,
@@ -244,7 +246,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
                         const SizedBox(height: 20),
 
-                        // OR Text
+                        // Teks ATAU
                         const Text(
                           'OR',
                           style: TextStyle(
@@ -256,7 +258,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
                         const SizedBox(height: 20),
 
-                        // Upload from Gallery Button
+                        // Tombol Unggah dari Galeri
                         SizedBox(
                           width: double.infinity,
                           height: 58,
@@ -276,25 +278,15 @@ class _HomeScreenState extends State<HomeScreen> {
                               children: [
                                 Icon(Icons.upload_file, size: 24),
                                 SizedBox(width: 12),
-                                Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      'Upload From',
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w500,
-                                      ),
+                                Flexible(
+                                  child: Text(
+                                    'Upload from Gallery',
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w600,
                                     ),
-                                    Text(
-                                      'Gallery',
-                                      style: TextStyle(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                  ],
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
                                 ),
                               ],
                             ),
@@ -306,36 +298,40 @@ class _HomeScreenState extends State<HomeScreen> {
 
                   const SizedBox(height: 32),
 
-                  // Image Preview (if available)
+                  // Pratinjau Gambar (jika tersedia)
                   if (_image != null || _imageBytes != null) ...[
-                    Container(
-                      width: double.infinity,
-                      height: 300,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(16),
-                        color: Colors.grey[200],
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.grey.withOpacity(0.3),
-                            spreadRadius: 2,
-                            blurRadius: 8,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
+                    ConstrainedBox(
+                      constraints: BoxConstraints(
+                        maxHeight: MediaQuery.of(context).size.height * 0.4,
                       ),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(16),
-                        child: kIsWeb && _imageBytes != null
-                            ? Image.memory(_imageBytes!, fit: BoxFit.cover)
-                            : _image != null
-                                ? Image.file(_image!, fit: BoxFit.cover)
-                                : const SizedBox(),
+                      child: Container(
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(16),
+                          color: Colors.grey[200],
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.grey.withOpacity(0.3),
+                              spreadRadius: 2,
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(16),
+                          child: kIsWeb && _imageBytes != null
+                              ? Image.memory(_imageBytes!, fit: BoxFit.contain)
+                              : _image != null
+                                  ? Image.file(_image!, fit: BoxFit.contain)
+                                  : const SizedBox(),
+                        ),
                       ),
                     ),
                     const SizedBox(height: 24),
                   ],
 
-                  // Loading or Result
+                  // Memuat atau Hasil
                   if (_isLoading)
                     Container(
                       padding: const EdgeInsets.all(24),
@@ -406,15 +402,19 @@ class _HomeScreenState extends State<HomeScreen> {
                             ),
                           ),
                           const SizedBox(height: 8),
-                          Text(
-                            _prediction!,
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
-                              color: _prediction!.toLowerCase().contains('non')
-                                  ? const Color(0xFF3D8B4E)
-                                  : Colors.red,
+                          Flexible(
+                            child: Text(
+                              _prediction!,
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                                color: _prediction!.toLowerCase().contains('non')
+                                    ? const Color(0xFF3D8B4E)
+                                    : Colors.red,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 2,
                             ),
                           ),
                           if (_confidence != null) ...[
@@ -433,7 +433,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     const SizedBox(height: 24),
                   ],
 
-                  // Bottom Info Box
+                  // Kotak Info Bawah
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.symmetric(
