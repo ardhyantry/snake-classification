@@ -1,47 +1,125 @@
+============================================================
+RESNET50V2 - SNAKE CLASSIFICATION RESULTS
+============================================================
+
 ===== BEST HYPERPARAMETERS =====
-Best Validation Accuracy (tuner): 0.9862068891525269
-Learning Rate: 2e-05
-Optimizer: adam
+Best Validation Accuracy (tuner): 0.9645389914512634
+Learning Rate: 0.0001
+Optimizer: adamw
 Dropout: 0.2
-Backbone trainable: 1
+Backbone: Frozen (trainable=False)
+
+===== DATASET INFORMATION =====
+Dataset Path: /Users/ardhyantry/Documents/GitHub/snake-classification/dataset ularBaru
+Test Set Size: 142 images
+  - Venomous: 71
+  - Non-Venomous: 71
+
+===== AUGMENTATION TECHNIQUES =====
+1. Random Zoom: 0.7-1.0 scale
+2. Random Rotation: -20° to +20°
+3. Random Horizontal Flip
 
 ===== FINAL EVALUATION ON TEST SET =====
-Test Accuracy: 0.9589
-Test Precision: 0.9200
-Test Recall: 1.0000
-Test F1-Score: 0.9583
+Test Accuracy: 0.9789 (97.89%)
+Test Precision: 0.9722 (97.22%)
+Test Recall: 0.9859 (98.59%)
+Test F1-Score: 0.9790 (97.90%)
 
-===== CONFUSION MATRIX =====
-[[71,  6],
- [ 0, 69]]
+============================================================
+CLASSIFICATION REPORT
+============================================================
+              precision    recall  f1-score   support
+
+    Venomous     0.9857    0.9718    0.9787        71
+Non-Venomous     0.9722    0.9859    0.9790        71
+
+    accuracy                         0.9789       142
+   macro avg     0.9790    0.9789    0.9789       142
+weighted avg     0.9790    0.9789    0.9789       142
+
+
+============================================================
+CONFUSION MATRIX
+============================================================
+                  Predicted
+              Venomous  Non-Venomous
+Actual
+Venomous          69          2
+Non-Venomous       1         70
+
+============================================================
+INTERPRETATION
+============================================================
+True Positives (Venomous correctly identified): 69
+True Negatives (Non-Venomous correctly identified): 70
+False Positives (Non-Venomous misclassified as Venomous): 1
+False Negatives (Venomous misclassified as Non-Venomous): 2
+
+Total Correct Predictions: 139/142
+Total Incorrect Predictions: 3/142
 
 ===== TRAINING HISTORY =====
-Epoch 001: Train Acc=0.7175, Val Acc=0.8483, Train Loss=0.5808, Val Loss=0.3759
-Epoch 002: Train Acc=0.9453, Val Acc=0.9241, Train Loss=0.1839, Val Loss=0.2104
-Epoch 003: Train Acc=0.9763, Val Acc=0.9448, Train Loss=0.1015, Val Loss=0.1428
-Epoch 004: Train Acc=0.9911, Val Acc=0.9448, Train Loss=0.0618, Val Loss=0.1290
-Epoch 005: Train Acc=0.9956, Val Acc=0.9379, Train Loss=0.0420, Val Loss=0.1234
-Epoch 006: Train Acc=0.9941, Val Acc=0.9517, Train Loss=0.0373, Val Loss=0.1110
-Epoch 007: Train Acc=1.0000, Val Acc=0.9517, Train Loss=0.0233, Val Loss=0.1071
-Epoch 008: Train Acc=0.9985, Val Acc=0.9448, Train Loss=0.0165, Val Loss=0.1032
-Epoch 009: Train Acc=1.0000, Val Acc=0.9448, Train Loss=0.0122, Val Loss=0.1107
-Epoch 010: Train Acc=0.9970, Val Acc=0.9379, Train Loss=0.0168, Val Loss=0.1070
-Epoch 011: Train Acc=0.9970, Val Acc=0.9448, Train Loss=0.0146, Val Loss=0.0995
-Epoch 012: Train Acc=0.9970, Val Acc=0.9517, Train Loss=0.0083, Val Loss=0.0905
-Epoch 013: Train Acc=0.9956, Val Acc=0.9586, Train Loss=0.0137, Val Loss=0.1017
-Epoch 014: Train Acc=0.9970, Val Acc=0.9586, Train Loss=0.0122, Val Loss=0.1180
-Epoch 015: Train Acc=0.9970, Val Acc=0.9586, Train Loss=0.0108, Val Loss=0.1034
-Epoch 016: Train Acc=0.9985, Val Acc=0.9586, Train Loss=0.0065, Val Loss=0.0953
-Epoch 017: Train Acc=0.9985, Val Acc=0.9586, Train Loss=0.0101, Val Loss=0.1026
+Epoch 001: Train Acc=0.7303, Val Acc=0.9220, Train Loss=0.5340, Val Loss=0.3227
+Epoch 002: Train Acc=0.7803, Val Acc=0.9362, Train Loss=0.4768, Val Loss=0.2419
+Epoch 003: Train Acc=0.8424, Val Acc=0.9574, Train Loss=0.3442, Val Loss=0.1971
+Epoch 004: Train Acc=0.8879, Val Acc=0.9645, Train Loss=0.2846, Val Loss=0.1750
+Epoch 005: Train Acc=0.9076, Val Acc=0.9645, Train Loss=0.2408, Val Loss=0.1515
+Epoch 006: Train Acc=0.9212, Val Acc=0.9645, Train Loss=0.2258, Val Loss=0.1373
+Epoch 007: Train Acc=0.9121, Val Acc=0.9645, Train Loss=0.2075, Val Loss=0.1278
+Epoch 008: Train Acc=0.9288, Val Acc=0.9716, Train Loss=0.1963, Val Loss=0.1279
+Epoch 009: Train Acc=0.9455, Val Acc=0.9716, Train Loss=0.1594, Val Loss=0.1186
+Epoch 010: Train Acc=0.9424, Val Acc=0.9716, Train Loss=0.1658, Val Loss=0.1116
+Epoch 011: Train Acc=0.9576, Val Acc=0.9716, Train Loss=0.1457, Val Loss=0.1084
+Epoch 012: Train Acc=0.9515, Val Acc=0.9716, Train Loss=0.1372, Val Loss=0.1042
+Epoch 013: Train Acc=0.9530, Val Acc=0.9716, Train Loss=0.1357, Val Loss=0.0989
+Epoch 014: Train Acc=0.9682, Val Acc=0.9716, Train Loss=0.1125, Val Loss=0.0972
+Epoch 015: Train Acc=0.9636, Val Acc=0.9716, Train Loss=0.1207, Val Loss=0.0938
+Epoch 016: Train Acc=0.9470, Val Acc=0.9645, Train Loss=0.1276, Val Loss=0.0909
+Epoch 017: Train Acc=0.9712, Val Acc=0.9645, Train Loss=0.0962, Val Loss=0.0866
+Epoch 018: Train Acc=0.9667, Val Acc=0.9645, Train Loss=0.0920, Val Loss=0.0861
+Epoch 019: Train Acc=0.9606, Val Acc=0.9645, Train Loss=0.1123, Val Loss=0.0849
+Epoch 020: Train Acc=0.9697, Val Acc=0.9716, Train Loss=0.0982, Val Loss=0.0866
+Epoch 021: Train Acc=0.9667, Val Acc=0.9716, Train Loss=0.0966, Val Loss=0.0845
+Epoch 022: Train Acc=0.9727, Val Acc=0.9716, Train Loss=0.0875, Val Loss=0.0823
+Epoch 023: Train Acc=0.9773, Val Acc=0.9716, Train Loss=0.0834, Val Loss=0.0780
+Epoch 024: Train Acc=0.9727, Val Acc=0.9716, Train Loss=0.0921, Val Loss=0.0783
+Epoch 025: Train Acc=0.9742, Val Acc=0.9645, Train Loss=0.0900, Val Loss=0.0815
+Epoch 026: Train Acc=0.9682, Val Acc=0.9716, Train Loss=0.0896, Val Loss=0.0769
+Epoch 027: Train Acc=0.9773, Val Acc=0.9716, Train Loss=0.0815, Val Loss=0.0737
+Epoch 028: Train Acc=0.9652, Val Acc=0.9716, Train Loss=0.0948, Val Loss=0.0747
+Epoch 029: Train Acc=0.9697, Val Acc=0.9716, Train Loss=0.0879, Val Loss=0.0752
+Epoch 030: Train Acc=0.9727, Val Acc=0.9716, Train Loss=0.0730, Val Loss=0.0724
+Epoch 031: Train Acc=0.9788, Val Acc=0.9716, Train Loss=0.0722, Val Loss=0.0714
+Epoch 032: Train Acc=0.9758, Val Acc=0.9716, Train Loss=0.0801, Val Loss=0.0740
+Epoch 033: Train Acc=0.9727, Val Acc=0.9716, Train Loss=0.0808, Val Loss=0.0728
+Epoch 034: Train Acc=0.9803, Val Acc=0.9716, Train Loss=0.0721, Val Loss=0.0711
+Epoch 035: Train Acc=0.9864, Val Acc=0.9716, Train Loss=0.0539, Val Loss=0.0741
+Epoch 036: Train Acc=0.9894, Val Acc=0.9716, Train Loss=0.0549, Val Loss=0.0712
+Epoch 037: Train Acc=0.9864, Val Acc=0.9716, Train Loss=0.0601, Val Loss=0.0722
+Epoch 038: Train Acc=0.9727, Val Acc=0.9716, Train Loss=0.0763, Val Loss=0.0726
+Epoch 039: Train Acc=0.9803, Val Acc=0.9716, Train Loss=0.0666, Val Loss=0.0701
+Epoch 040: Train Acc=0.9864, Val Acc=0.9787, Train Loss=0.0601, Val Loss=0.0689
+Epoch 041: Train Acc=0.9773, Val Acc=0.9716, Train Loss=0.0741, Val Loss=0.0698
+Epoch 042: Train Acc=0.9818, Val Acc=0.9716, Train Loss=0.0704, Val Loss=0.0700
+Epoch 043: Train Acc=0.9818, Val Acc=0.9787, Train Loss=0.0605, Val Loss=0.0676
+Epoch 044: Train Acc=0.9894, Val Acc=0.9787, Train Loss=0.0532, Val Loss=0.0672
+Epoch 045: Train Acc=0.9697, Val Acc=0.9787, Train Loss=0.0619, Val Loss=0.0685
+Epoch 046: Train Acc=0.9833, Val Acc=0.9787, Train Loss=0.0639, Val Loss=0.0658
+Epoch 047: Train Acc=0.9864, Val Acc=0.9787, Train Loss=0.0448, Val Loss=0.0671
+Epoch 048: Train Acc=0.9773, Val Acc=0.9787, Train Loss=0.0610, Val Loss=0.0674
+Epoch 049: Train Acc=0.9788, Val Acc=0.9787, Train Loss=0.0576, Val Loss=0.0662
+Epoch 050: Train Acc=0.9879, Val Acc=0.9787, Train Loss=0.0522, Val Loss=0.0666
+Epoch 051: Train Acc=0.9818, Val Acc=0.9716, Train Loss=0.0639, Val Loss=0.0683
 
 ===== MODEL SUMMARY =====
-Model: "model_1"
+Model: "model"
 __________________________________________________________________________________________________
  Layer (type)                Output Shape                 Param #   Connected to                  
 ==================================================================================================
- input_2 (InputLayer)        [(None, 224, 224, 3)]        0         []                            
+ input_1 (InputLayer)        [(None, 224, 224, 3)]        0         []                            
                                                                                                   
- conv1_pad (ZeroPadding2D)   (None, 230, 230, 3)          0         ['input_2[0][0]']             
+ conv1_pad (ZeroPadding2D)   (None, 230, 230, 3)          0         ['input_1[0][0]']             
                                                                                                   
  conv1_conv (Conv2D)         (None, 112, 112, 64)         9472      ['conv1_pad[0][0]']           
                                                                                                   
@@ -145,13 +223,13 @@ ________________________________________________________________________________
  conv2_block3_2_relu (Activ  (None, 28, 28, 64)           0         ['conv2_block3_2_bn[0][0]']   
  ation)                                                                                           
                                                                                                   
- max_pooling2d_3 (MaxPoolin  (None, 28, 28, 256)          0         ['conv2_block2_out[0][0]']    
- g2D)                                                                                             
+ max_pooling2d (MaxPooling2  (None, 28, 28, 256)          0         ['conv2_block2_out[0][0]']    
+ D)                                                                                               
                                                                                                   
  conv2_block3_3_conv (Conv2  (None, 28, 28, 256)          16640     ['conv2_block3_2_relu[0][0]'] 
  D)                                                                                               
                                                                                                   
- conv2_block3_out (Add)      (None, 28, 28, 256)          0         ['max_pooling2d_3[0][0]',     
+ conv2_block3_out (Add)      (None, 28, 28, 256)          0         ['max_pooling2d[0][0]',       
                                                                      'conv2_block3_3_conv[0][0]'] 
                                                                                                   
  conv3_block1_preact_bn (Ba  (None, 28, 28, 256)          1024      ['conv2_block3_out[0][0]']    
@@ -283,13 +361,13 @@ ________________________________________________________________________________
  conv3_block4_2_relu (Activ  (None, 14, 14, 128)          0         ['conv3_block4_2_bn[0][0]']   
  ation)                                                                                           
                                                                                                   
- max_pooling2d_4 (MaxPoolin  (None, 14, 14, 512)          0         ['conv3_block3_out[0][0]']    
+ max_pooling2d_1 (MaxPoolin  (None, 14, 14, 512)          0         ['conv3_block3_out[0][0]']    
  g2D)                                                                                             
                                                                                                   
  conv3_block4_3_conv (Conv2  (None, 14, 14, 512)          66048     ['conv3_block4_2_relu[0][0]'] 
  D)                                                                                               
                                                                                                   
- conv3_block4_out (Add)      (None, 14, 14, 512)          0         ['max_pooling2d_4[0][0]',     
+ conv3_block4_out (Add)      (None, 14, 14, 512)          0         ['max_pooling2d_1[0][0]',     
                                                                      'conv3_block4_3_conv[0][0]'] 
                                                                                                   
  conv4_block1_preact_bn (Ba  (None, 14, 14, 512)          2048      ['conv3_block4_out[0][0]']    
@@ -487,13 +565,13 @@ ________________________________________________________________________________
  conv4_block6_2_relu (Activ  (None, 7, 7, 256)            0         ['conv4_block6_2_bn[0][0]']   
  ation)                                                                                           
                                                                                                   
- max_pooling2d_5 (MaxPoolin  (None, 7, 7, 1024)           0         ['conv4_block5_out[0][0]']    
+ max_pooling2d_2 (MaxPoolin  (None, 7, 7, 1024)           0         ['conv4_block5_out[0][0]']    
  g2D)                                                                                             
                                                                                                   
  conv4_block6_3_conv (Conv2  (None, 7, 7, 1024)           263168    ['conv4_block6_2_relu[0][0]'] 
  D)                                                                                               
                                                                                                   
- conv4_block6_out (Add)      (None, 7, 7, 1024)           0         ['max_pooling2d_5[0][0]',     
+ conv4_block6_out (Add)      (None, 7, 7, 1024)           0         ['max_pooling2d_2[0][0]',     
                                                                      'conv4_block6_3_conv[0][0]'] 
                                                                                                   
  conv5_block1_preact_bn (Ba  (None, 7, 7, 1024)           4096      ['conv4_block6_out[0][0]']    
@@ -606,12 +684,12 @@ ________________________________________________________________________________
  avg_pool (GlobalAveragePoo  (None, 2048)                 0         ['post_relu[0][0]']           
  ling2D)                                                                                          
                                                                                                   
- dropout_1 (Dropout)         (None, 2048)                 0         ['avg_pool[0][0]']            
+ dropout (Dropout)           (None, 2048)                 0         ['avg_pool[0][0]']            
                                                                                                   
- dense (Dense)               (None, 2)                    4098      ['dropout_1[0][0]']           
+ dense (Dense)               (None, 2)                    4098      ['dropout[0][0]']             
                                                                                                   
 ==================================================================================================
 Total params: 23568898 (89.91 MB)
-Trainable params: 23523458 (89.73 MB)
-Non-trainable params: 45440 (177.50 KB)
+Trainable params: 4098 (16.01 KB)
+Non-trainable params: 23564800 (89.89 MB)
 __________________________________________________________________________________________________

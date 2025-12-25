@@ -1,0 +1,196 @@
+============================================================
+VISION TRANSFORMER (ViT) - SNAKE CLASSIFICATION RESULTS
+============================================================
+
+===== BEST HYPERPARAMETERS =====
+Best Validation Accuracy: 0.9929
+Learning Rate: 0.0001
+Optimizer: adam
+Dropout: 0.4
+
+===== DATASET INFORMATION =====
+Dataset Path: /Users/ardhyantry/Documents/GitHub/snake-classification/dataset ularBaru
+Test Set Size: 142 images
+  - Venomous: 71
+  - Non-Venomous: 71
+
+Training set:   660 images
+  - Venomous:     328 (49.7%)
+  - Non-Venomous: 332 (50.3%)
+
+Validation set: 141 images
+  - Venomous:     70 (49.6%)
+  - Non-Venomous: 71 (50.4%)
+
+Test set:       142 images
+  - Venomous:     71 (50.0%)
+  - Non-Venomous: 71 (50.0%)
+
+===== AUGMENTATION TECHNIQUES =====
+1. Random Zoom: 0.7-1.0 scale
+2. Random Rotation: -20° to +20°
+3. Random Horizontal Flip
+
+===== FINAL EVALUATION ON TEST SET =====
+Test Accuracy: 0.9859 (98.59%)
+Test Precision: 1.0000 (100.00%)
+Test Recall: 0.9718 (97.18%)
+Test F1-Score: 0.9857 (98.57%)
+
+============================================================
+CLASSIFICATION REPORT
+============================================================
+              precision    recall  f1-score   support
+
+    Venomous     0.9726    1.0000    0.9861        71
+Non-Venomous     1.0000    0.9718    0.9857        71
+
+    accuracy                         0.9859       142
+   macro avg     0.9863    0.9859    0.9859       142
+weighted avg     0.9863    0.9859    0.9859       142
+
+
+============================================================
+CONFUSION MATRIX
+============================================================
+                  Predicted
+              Venomous  Non-Venomous
+Actual
+Venomous          71          0
+Non-Venomous       2         69
+
+============================================================
+INTERPRETATION
+============================================================
+True Positives (Venomous correctly identified): 71
+True Negatives (Non-Venomous correctly identified): 69
+False Positives (Non-Venomous misclassified as Venomous): 2
+False Negatives (Venomous misclassified as Non-Venomous): 0
+
+Total Correct Predictions: 140/142
+Total Incorrect Predictions: 2/142
+
+============================================================
+TRAINING HISTORY
+============================================================
+Epoch 001: Train Acc=0.7273, Val Acc=0.9149, Train Loss=0.5370, Val Loss=0.4094
+Epoch 002: Train Acc=0.8288, Val Acc=0.9504, Train Loss=0.4324, Val Loss=0.3260
+Epoch 003: Train Acc=0.8773, Val Acc=0.9504, Train Loss=0.3709, Val Loss=0.2676
+Epoch 004: Train Acc=0.9106, Val Acc=0.9645, Train Loss=0.3110, Val Loss=0.2279
+Epoch 005: Train Acc=0.9379, Val Acc=0.9787, Train Loss=0.2713, Val Loss=0.1947
+Epoch 006: Train Acc=0.9439, Val Acc=0.9787, Train Loss=0.2360, Val Loss=0.1714
+Epoch 007: Train Acc=0.9455, Val Acc=0.9858, Train Loss=0.2136, Val Loss=0.1531
+Epoch 008: Train Acc=0.9530, Val Acc=0.9858, Train Loss=0.1966, Val Loss=0.1383
+Epoch 009: Train Acc=0.9667, Val Acc=0.9858, Train Loss=0.1735, Val Loss=0.1252
+Epoch 010: Train Acc=0.9424, Val Acc=0.9858, Train Loss=0.1760, Val Loss=0.1155
+Epoch 011: Train Acc=0.9561, Val Acc=0.9858, Train Loss=0.1594, Val Loss=0.1087
+Epoch 012: Train Acc=0.9636, Val Acc=0.9858, Train Loss=0.1468, Val Loss=0.1028
+Epoch 013: Train Acc=0.9606, Val Acc=0.9858, Train Loss=0.1422, Val Loss=0.0976
+Epoch 014: Train Acc=0.9712, Val Acc=0.9858, Train Loss=0.1279, Val Loss=0.0921
+Epoch 015: Train Acc=0.9545, Val Acc=0.9858, Train Loss=0.1319, Val Loss=0.0856
+Epoch 016: Train Acc=0.9652, Val Acc=0.9858, Train Loss=0.1197, Val Loss=0.0824
+Epoch 017: Train Acc=0.9652, Val Acc=0.9858, Train Loss=0.1145, Val Loss=0.0784
+Epoch 018: Train Acc=0.9727, Val Acc=0.9858, Train Loss=0.1139, Val Loss=0.0753
+Epoch 019: Train Acc=0.9727, Val Acc=0.9858, Train Loss=0.1096, Val Loss=0.0725
+Epoch 020: Train Acc=0.9667, Val Acc=0.9858, Train Loss=0.1074, Val Loss=0.0703
+Epoch 021: Train Acc=0.9742, Val Acc=0.9858, Train Loss=0.0958, Val Loss=0.0674
+Epoch 022: Train Acc=0.9727, Val Acc=0.9858, Train Loss=0.0933, Val Loss=0.0658
+Epoch 023: Train Acc=0.9712, Val Acc=0.9858, Train Loss=0.0918, Val Loss=0.0647
+Epoch 024: Train Acc=0.9682, Val Acc=0.9858, Train Loss=0.0873, Val Loss=0.0630
+Epoch 025: Train Acc=0.9742, Val Acc=0.9858, Train Loss=0.0900, Val Loss=0.0614
+Epoch 026: Train Acc=0.9773, Val Acc=0.9858, Train Loss=0.0899, Val Loss=0.0594
+Epoch 027: Train Acc=0.9788, Val Acc=0.9858, Train Loss=0.0843, Val Loss=0.0577
+Epoch 028: Train Acc=0.9727, Val Acc=0.9858, Train Loss=0.0814, Val Loss=0.0574
+Epoch 029: Train Acc=0.9803, Val Acc=0.9858, Train Loss=0.0759, Val Loss=0.0551
+Epoch 030: Train Acc=0.9758, Val Acc=0.9858, Train Loss=0.0769, Val Loss=0.0536
+Epoch 031: Train Acc=0.9803, Val Acc=0.9858, Train Loss=0.0756, Val Loss=0.0521
+Epoch 032: Train Acc=0.9818, Val Acc=0.9858, Train Loss=0.0767, Val Loss=0.0521
+Epoch 033: Train Acc=0.9758, Val Acc=0.9858, Train Loss=0.0804, Val Loss=0.0505
+Epoch 034: Train Acc=0.9712, Val Acc=0.9858, Train Loss=0.0810, Val Loss=0.0497
+Epoch 035: Train Acc=0.9818, Val Acc=0.9858, Train Loss=0.0647, Val Loss=0.0488
+Epoch 036: Train Acc=0.9788, Val Acc=0.9858, Train Loss=0.0723, Val Loss=0.0488
+Epoch 037: Train Acc=0.9894, Val Acc=0.9858, Train Loss=0.0624, Val Loss=0.0483
+Epoch 038: Train Acc=0.9788, Val Acc=0.9858, Train Loss=0.0688, Val Loss=0.0475
+Epoch 039: Train Acc=0.9727, Val Acc=0.9858, Train Loss=0.0669, Val Loss=0.0463
+Epoch 040: Train Acc=0.9758, Val Acc=0.9858, Train Loss=0.0673, Val Loss=0.0462
+Epoch 041: Train Acc=0.9742, Val Acc=0.9858, Train Loss=0.0688, Val Loss=0.0464
+Epoch 042: Train Acc=0.9833, Val Acc=0.9858, Train Loss=0.0562, Val Loss=0.0447
+Epoch 043: Train Acc=0.9788, Val Acc=0.9858, Train Loss=0.0664, Val Loss=0.0433
+Epoch 044: Train Acc=0.9788, Val Acc=0.9858, Train Loss=0.0624, Val Loss=0.0434
+Epoch 045: Train Acc=0.9864, Val Acc=0.9858, Train Loss=0.0588, Val Loss=0.0431
+Epoch 046: Train Acc=0.9818, Val Acc=0.9858, Train Loss=0.0567, Val Loss=0.0428
+Epoch 047: Train Acc=0.9864, Val Acc=0.9858, Train Loss=0.0538, Val Loss=0.0415
+Epoch 048: Train Acc=0.9818, Val Acc=0.9858, Train Loss=0.0621, Val Loss=0.0412
+Epoch 049: Train Acc=0.9894, Val Acc=0.9858, Train Loss=0.0548, Val Loss=0.0419
+Epoch 050: Train Acc=0.9879, Val Acc=0.9858, Train Loss=0.0526, Val Loss=0.0419
+Epoch 051: Train Acc=0.9848, Val Acc=0.9858, Train Loss=0.0579, Val Loss=0.0412
+Epoch 052: Train Acc=0.9848, Val Acc=0.9858, Train Loss=0.0532, Val Loss=0.0408
+Epoch 053: Train Acc=0.9848, Val Acc=0.9858, Train Loss=0.0486, Val Loss=0.0405
+Epoch 054: Train Acc=0.9864, Val Acc=0.9858, Train Loss=0.0498, Val Loss=0.0401
+Epoch 055: Train Acc=0.9833, Val Acc=0.9858, Train Loss=0.0498, Val Loss=0.0399
+Epoch 056: Train Acc=0.9848, Val Acc=0.9858, Train Loss=0.0452, Val Loss=0.0398
+Epoch 057: Train Acc=0.9818, Val Acc=0.9858, Train Loss=0.0501, Val Loss=0.0394
+Epoch 058: Train Acc=0.9864, Val Acc=0.9858, Train Loss=0.0497, Val Loss=0.0393
+Epoch 059: Train Acc=0.9803, Val Acc=0.9858, Train Loss=0.0510, Val Loss=0.0387
+Epoch 060: Train Acc=0.9803, Val Acc=0.9858, Train Loss=0.0546, Val Loss=0.0387
+Epoch 061: Train Acc=0.9758, Val Acc=0.9858, Train Loss=0.0625, Val Loss=0.0386
+Epoch 062: Train Acc=0.9833, Val Acc=0.9858, Train Loss=0.0520, Val Loss=0.0386
+Epoch 063: Train Acc=0.9848, Val Acc=0.9858, Train Loss=0.0500, Val Loss=0.0384
+Epoch 064: Train Acc=0.9879, Val Acc=0.9858, Train Loss=0.0453, Val Loss=0.0387
+Epoch 065: Train Acc=0.9864, Val Acc=0.9858, Train Loss=0.0524, Val Loss=0.0386
+Epoch 066: Train Acc=0.9924, Val Acc=0.9858, Train Loss=0.0500, Val Loss=0.0383
+Epoch 067: Train Acc=0.9848, Val Acc=0.9858, Train Loss=0.0508, Val Loss=0.0390
+Epoch 068: Train Acc=0.9879, Val Acc=0.9858, Train Loss=0.0455, Val Loss=0.0386
+Epoch 069: Train Acc=0.9848, Val Acc=0.9858, Train Loss=0.0494, Val Loss=0.0382
+Epoch 070: Train Acc=0.9894, Val Acc=0.9858, Train Loss=0.0465, Val Loss=0.0381
+Epoch 071: Train Acc=0.9833, Val Acc=0.9858, Train Loss=0.0515, Val Loss=0.0380
+Epoch 072: Train Acc=0.9848, Val Acc=0.9858, Train Loss=0.0492, Val Loss=0.0379
+Epoch 073: Train Acc=0.9924, Val Acc=0.9858, Train Loss=0.0399, Val Loss=0.0378
+Epoch 074: Train Acc=0.9848, Val Acc=0.9858, Train Loss=0.0443, Val Loss=0.0375
+Epoch 075: Train Acc=0.9833, Val Acc=0.9858, Train Loss=0.0466, Val Loss=0.0376
+Epoch 076: Train Acc=0.9803, Val Acc=0.9858, Train Loss=0.0482, Val Loss=0.0375
+Epoch 077: Train Acc=0.9788, Val Acc=0.9858, Train Loss=0.0565, Val Loss=0.0374
+Epoch 078: Train Acc=0.9848, Val Acc=0.9858, Train Loss=0.0498, Val Loss=0.0373
+Epoch 079: Train Acc=0.9818, Val Acc=0.9858, Train Loss=0.0533, Val Loss=0.0371
+Epoch 080: Train Acc=0.9894, Val Acc=0.9858, Train Loss=0.0466, Val Loss=0.0371
+Epoch 081: Train Acc=0.9848, Val Acc=0.9858, Train Loss=0.0535, Val Loss=0.0369
+Epoch 082: Train Acc=0.9894, Val Acc=0.9858, Train Loss=0.0459, Val Loss=0.0369
+Epoch 083: Train Acc=0.9864, Val Acc=0.9858, Train Loss=0.0430, Val Loss=0.0369
+Epoch 084: Train Acc=0.9848, Val Acc=0.9858, Train Loss=0.0503, Val Loss=0.0367
+Epoch 085: Train Acc=0.9894, Val Acc=0.9858, Train Loss=0.0418, Val Loss=0.0366
+Epoch 086: Train Acc=0.9894, Val Acc=0.9858, Train Loss=0.0482, Val Loss=0.0366
+Epoch 087: Train Acc=0.9924, Val Acc=0.9858, Train Loss=0.0376, Val Loss=0.0364
+Epoch 088: Train Acc=0.9879, Val Acc=0.9858, Train Loss=0.0446, Val Loss=0.0362
+Epoch 089: Train Acc=0.9848, Val Acc=0.9858, Train Loss=0.0426, Val Loss=0.0361
+Epoch 090: Train Acc=0.9833, Val Acc=0.9858, Train Loss=0.0510, Val Loss=0.0362
+Epoch 091: Train Acc=0.9803, Val Acc=0.9858, Train Loss=0.0531, Val Loss=0.0363
+Epoch 092: Train Acc=0.9894, Val Acc=0.9858, Train Loss=0.0455, Val Loss=0.0362
+Epoch 093: Train Acc=0.9848, Val Acc=0.9858, Train Loss=0.0442, Val Loss=0.0363
+Epoch 094: Train Acc=0.9864, Val Acc=0.9858, Train Loss=0.0394, Val Loss=0.0363
+
+============================================================
+MODEL SUMMARY
+============================================================
+Model: "model_1"
+_________________________________________________________________
+ Layer (type)                Output Shape              Param #   
+=================================================================
+ input_2 (InputLayer)        [(None, 3, 224, 224)]     0         
+                                                                 
+ tf_vi_t_model_1 (TFViTMode  TFBaseModelOutputWithPo   86389248  
+ l)                          oling(last_hidden_state             
+                             =(None, 197, 768),                  
+                              pooler_output=(None, 7             
+                             68),                                
+                              hidden_states=None, at             
+                             tentions=None)                      
+                                                                 
+ dropout_75 (Dropout)        (None, 768)               0         
+                                                                 
+ dense (Dense)               (None, 2)                 1538      
+                                                                 
+=================================================================
+Total params: 86390786 (329.55 MB)
+Trainable params: 1538 (6.01 KB)
+Non-trainable params: 86389248 (329.55 MB)
+_________________________________________________________________

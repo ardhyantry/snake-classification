@@ -1,17 +1,47 @@
+============================================================
+EFFICIENTNETV2M - SNAKE CLASSIFICATION RESULTS
+============================================================
+
 ===== BEST HYPERPARAMETERS =====
-Best validation accuracy (tuner): 0.978723406791687
+Best Validation Accuracy (tuner): 0.9716312289237976
 Learning Rate: 5e-05
 Optimizer: adam
-Dropout: 0.1
-Backbone trainable: 1
+Dropout: 0.2
+Backbone: Frozen (trainable=False)
+
+===== DATASET INFORMATION =====
+Dataset Path: /Users/ardhyantry/Documents/GitHub/snake-classification/dataset ularBaru
+Test Set Size: 142 images
+  - Venomous: 71
+  - Non-Venomous: 71
+
+===== AUGMENTATION TECHNIQUES =====
+1. Random Zoom: 0.7-1.0 scale
+2. Random Rotation: -20° to +20°
+3. Random Horizontal Flip
 
 ===== FINAL EVALUATION ON TEST SET =====
-Test Accuracy: 0.9859
-Test Precision: 0.9706
-Test Recall: 1.0000
-Test F1-Score: 0.9851
+Test Accuracy: 0.9718 (97.18%)
+Test Precision: 0.9855 (98.55%)
+Test Recall: 0.9577 (95.77%)
+Test F1-Score: 0.9714 (97.14%)
 
-===== CONFUSION MATRIX =====
-[[74,  2],
- [ 0, 66]]
+============================================================
+CLASSIFICATION REPORT
+============================================================
+              precision    recall  f1-score   support
 
+    Venomous     0.9589    0.9859    0.9722        71
+Non-Venomous     0.9855    0.9577    0.9714        71
+
+    accuracy                         0.9718       142
+   macro avg     0.9722    0.9718    0.9718       142
+weighted avg     0.9722    0.9718    0.9718       142
+
+
+============================================================
+CONFUSION MATRIX
+============================================================
+Classes: ['Venomous', 'Non-Venomous']
+[[70,  1],
+ [ 3, 68]]
