@@ -8,6 +8,7 @@ from pathlib import Path
 from PIL import Image
 import keras_tuner as kt
 from sklearn.metrics import classification_report, confusion_matrix, accuracy_score, precision_score, recall_score, f1_score
+from sklearn.model_selection import train_test_split
 import matplotlib.pyplot as plt
 import seaborn as sns
 
@@ -94,23 +95,48 @@ def create_datasets_with_batch_size(data_dir, batch_size, train_ratio=0.7, val_r
     all_files = venomous_files + non_venomous_files
     all_labels = [0] * len(venomous_files) + [1] * len(non_venomous_files)
 
-    # global shuffle before split
-    indices = np.random.permutation(len(all_files))
-    all_files = [all_files[i] for i in indices]
-    all_labels = [all_labels[i] for i in indices]
+    # Stratified split using sklearn train_test_split
+    # First split: train vs (val + test)
+    val_test_ratio = val_ratio + test_ratio
+    train_files, temp_files, train_labels, temp_labels = train_test_split(
+        all_files, all_labels,
+        test_size=val_test_ratio,
+        stratify=all_labels,
+        random_state=42
+    )
+    
+    # Second split: val vs test (from the temp set)
+    # Calculate the proportion of test within (val + test)
+    test_proportion = test_ratio / val_test_ratio
+    val_files, test_files, val_labels, test_labels = train_test_split(
+        temp_files, temp_labels,
+        test_size=test_proportion,
+        stratify=temp_labels,
+        random_state=42
+    )
 
-    n = len(all_files)
-    n_train = int(n * train_ratio)
-    n_val = int(n * val_ratio)
+    # Print split statistics
+    print(f"\n{'='*50}")
+    print("STRATIFIED SPLIT STATISTICS")
+    print(f"{'='*50}")
+    print(f"Total samples: {len(all_files)}")
+    print(f"Training: {len(train_files)} ({len(train_files)/len(all_files)*100:.1f}%)")
+    print(f"Validation: {len(val_files)} ({len(val_files)/len(all_files)*100:.1f}%)")
+    print(f"Test: {len(test_files)} ({len(test_files)/len(all_files)*100:.1f}%)")
+    
+    # Print class distribution per split
+    print(f"\nClass distribution:")
+    print(f"  Train - Venomous: {train_labels.count(0)}, Non-Venomous: {train_labels.count(1)}")
+    print(f"  Val   - Venomous: {val_labels.count(0)}, Non-Venomous: {val_labels.count(1)}")
+    print(f"  Test  - Venomous: {test_labels.count(0)}, Non-Venomous: {test_labels.count(1)}")
+    print(f"{'='*50}\n")
 
-    train_files = all_files[:n_train]
-    train_labels = all_labels[:n_train]
-    val_files = all_files[n_train:n_train + n_val]
-    val_labels = all_labels[n_train:n_train + n_val]
-    test_files = all_files[n_train + n_val:]
-    test_labels = all_labels[n_train + n_val:]
-
-    print(f"Training: {len(train_files)}, Val: {len(val_files)}, Test: {len(test_files)}")
+    # Store split info for later use
+    split_info = {
+        'train': {'venomous': train_labels.count(0), 'non_venomous': train_labels.count(1)},
+        'val': {'venomous': val_labels.count(0), 'non_venomous': val_labels.count(1)},
+        'test': {'venomous': test_labels.count(0), 'non_venomous': test_labels.count(1)}
+    }
 
     train_ds = tf.data.Dataset.from_tensor_slices((train_files, train_labels))
     val_ds = tf.data.Dataset.from_tensor_slices((val_files, val_labels))
@@ -120,11 +146,35 @@ def create_datasets_with_batch_size(data_dir, batch_size, train_ratio=0.7, val_r
     val_ds = val_ds.map(preprocess_image, num_parallel_calls=tf.data.AUTOTUNE)
     test_ds = test_ds.map(preprocess_image, num_parallel_calls=tf.data.AUTOTUNE)
 
-    # augmentation for training (channel-last)
     def augment(image, label):
+        # Image is already (224,224,3) - channels last format for VGG16
+        
+        # Random zoom between 0.7 and 1.0
+        zoom_factor = tf.random.uniform([], 0.7, 1.0)
+        h, w = IMG_SIZE[0], IMG_SIZE[1]
+        new_h = tf.cast(tf.cast(h, tf.float32) * zoom_factor, tf.int32)
+        new_w = tf.cast(tf.cast(w, tf.float32) * zoom_factor, tf.int32)
+        
+        # Resize to zoomed size then back to original size (crops center)
+        image = tf.image.resize(image, [new_h, new_w])
+        image = tf.image.resize_with_crop_or_pad(image, h, w)
+        
+        # Random rotation between -20 and +20 degrees
+        def rotate_image(img):
+            from scipy import ndimage
+            angle = np.random.uniform(-20.0, 20.0)
+            return ndimage.rotate(img, angle, reshape=False, mode='nearest')
+        
+        image = tf.py_function(
+            func=rotate_image,
+            inp=[image],
+            Tout=tf.float32
+        )
+        image.set_shape((224, 224, 3))
+        
+        # Other augmentations
         image = tf.image.random_flip_left_right(image)
-        image = tf.image.random_brightness(image, 0.1)
-        image = tf.image.random_contrast(image, 0.9, 1.1)
+        # Keep channels last format (224,224,3) for VGG16
         return image, label
 
     train_ds = train_ds.map(augment, num_parallel_calls=tf.data.AUTOTUNE)
@@ -134,21 +184,21 @@ def create_datasets_with_batch_size(data_dir, batch_size, train_ratio=0.7, val_r
     val_ds = val_ds.batch(batch_size).prefetch(tf.data.AUTOTUNE)
     test_ds = test_ds.batch(batch_size).prefetch(tf.data.AUTOTUNE)
 
-    return train_ds, val_ds, test_ds
+    return train_ds, val_ds, test_ds, split_info
 
 def create_datasets(data_dir, split_ratio=0.3):
-    return create_datasets_with_batch_size(
+    train_ds, val_ds, test_ds, split_info = create_datasets_with_batch_size(
         data_dir, BASE_BATCH_SIZE,
         train_ratio=1-split_ratio,
         val_ratio=split_ratio/2,
         test_ratio=split_ratio/2
     )
+    return train_ds, val_ds, test_ds, split_info
 
 # ---------------- Model building for KerasTuner ----------------
 def build_model(hp):
     inputs = tf.keras.Input(shape=(IMG_SIZE[0], IMG_SIZE[1], 3), dtype=tf.float32)
 
-    base_trainable = hp.Choice("backbone_trainable", [False, True])
     dropout = hp.Float("dropout", min_value=0.0, max_value=0.5, step=0.1)
     lr = hp.Choice("learning_rate", [1e-5, 2e-5, 5e-5, 1e-4])
     opt_type = hp.Choice("optimizer", ["adam", "adamw"])
@@ -159,7 +209,7 @@ def build_model(hp):
         input_tensor=inputs,
         pooling='avg'
     )
-    base_model.trainable = bool(base_trainable)
+    base_model.trainable = False
 
     x = base_model.output
     x = tf.keras.layers.Dropout(dropout)(x)
@@ -181,7 +231,7 @@ def build_model(hp):
 
 # ---------------- Run pipeline ----------------
 print("Creating datasets...")
-train_ds, val_ds, test_ds = create_datasets(DATASET_PATH)
+train_ds, val_ds, test_ds, split_info = create_datasets(DATASET_PATH)
 
 # Setup KerasTuner
 tuner = kt.RandomSearch(
@@ -209,7 +259,7 @@ best_trial = tuner.oracle.get_best_trials(1)[0]
 best_score = getattr(best_trial, "score", None)
 
 print(f"\nBest validation accuracy (tuner): {best_score}")
-print(f"Best LR: {best_hps.get('learning_rate')}, Optimizer: {best_hps.get('optimizer')}, Dropout: {best_hps.get('dropout')}, Backbone trainable: {best_hps.get('backbone_trainable')}")
+print(f"Best LR: {best_hps.get('learning_rate')}, Optimizer: {best_hps.get('optimizer')}, Dropout: {best_hps.get('dropout')}")
 
 # Create final model with best hps
 def create_final_model(hp):
@@ -220,7 +270,7 @@ def create_final_model(hp):
         input_tensor=inputs,
         pooling='avg'
     )
-    base_model.trainable = bool(hp.get("backbone_trainable"))
+    base_model.trainable = False  # Keep frozen as in tuning
     x = base_model.output
     x = tf.keras.layers.Dropout(hp.get("dropout"))(x)
     outputs = tf.keras.layers.Dense(NUM_CLASSES, activation='softmax')(x)
@@ -290,16 +340,6 @@ report = classification_report(true_labels, predicted_labels, target_names=CLASS
 print("\n===== CLASSIFICATION REPORT =====\n")
 print(report)
 
-# Save classification report to text
-report_path = os.path.join(OUT_DIR, "classification_report.txt")
-with open(report_path, "w") as f:
-    f.write(f"Best validation accuracy (tuner): {best_score}\n")
-    f.write(f"Best hyperparameters: LR={best_hps.get('learning_rate')}, Optimizer={best_hps.get('optimizer')}, Dropout={best_hps.get('dropout')}, Backbone_trainable={best_hps.get('backbone_trainable')}\n\n")
-    f.write(f"Accuracy: {accuracy:.4f}\nPrecision: {precision:.4f}\nRecall: {recall:.4f}\nF1: {f1:.4f}\n\n")
-    f.write("===== CLASSIFICATION REPORT =====\n")
-    f.write(report)
-print("Saved classification report to:", report_path)
-
 # Confusion matrix plot
 plt.figure(figsize=(6,5))
 sns.heatmap(conf_matrix, annot=True, fmt='d', cmap='Blues', xticklabels=CLASS_NAMES, yticklabels=CLASS_NAMES)
@@ -344,5 +384,61 @@ tflite_model = converter.convert()
 with open(tflite_save_path, "wb") as f:
     f.write(tflite_model)
 print("Saved TFLite model to:", tflite_save_path)
+
+# Save tuning results with classification report
+tuner_results_path = os.path.join(OUT_DIR, "tuning_results.txt")
+with open(tuner_results_path, "w") as f:
+    f.write("="*60 + "\n")
+    f.write("VGG16 - SNAKE CLASSIFICATION RESULTS\n")
+    f.write("="*60 + "\n\n")
+    
+    f.write("===== BEST HYPERPARAMETERS =====\n")
+    f.write(f"Best Validation Accuracy (tuner): {best_score}\n")
+    f.write(f"Learning Rate: {best_hps.get('learning_rate')}\n")
+    f.write(f"Optimizer: {best_hps.get('optimizer')}\n")
+    f.write(f"Dropout: {best_hps.get('dropout')}\n")
+    f.write(f"Backbone: Frozen (trainable=False)\n\n")
+    
+    f.write("===== DATASET INFORMATION =====\n")
+    f.write(f"Dataset Path: {DATASET_PATH}\n")
+    f.write(f"Test Set Size: {len(true_labels)} images\n")
+    f.write(f"  - Venomous: {np.sum(true_labels == 0)}\n")
+    f.write(f"  - Non-Venomous: {np.sum(true_labels == 1)}\n\n")
+    
+    f.write("===== AUGMENTATION TECHNIQUES =====\n")
+    f.write("1. Random Zoom: 0.7-1.0 scale\n")
+    f.write("2. Random Rotation: -20° to +20°\n")
+    f.write("3. Random Horizontal Flip\n\n")
+
+    f.write("===== FINAL EVALUATION ON TEST SET =====\n")
+    f.write(f"Test Accuracy: {accuracy:.4f} ({accuracy*100:.2f}%)\n")
+    f.write(f"Test Precision: {precision:.4f} ({precision*100:.2f}%)\n")
+    f.write(f"Test Recall: {recall:.4f} ({recall*100:.2f}%)\n")
+    f.write(f"Test F1-Score: {f1:.4f} ({f1*100:.2f}%)\n\n")
+    
+    f.write("="*60 + "\n")
+    f.write("CLASSIFICATION REPORT\n")
+    f.write("="*60 + "\n")
+    f.write(report + "\n")
+
+    f.write("\n" + "="*60 + "\n")
+    f.write("CONFUSION MATRIX\n")
+    f.write("="*60 + "\n")
+    f.write(f"Classes: {CLASS_NAMES}\n")
+    f.write(np.array2string(conf_matrix, separator=', ') + "\n")
+    
+    f.write("\n" + "="*60 + "\n")
+    f.write("TRAINING HISTORY (EPOCH BY EPOCH)\n")
+    f.write("="*60 + "\n")
+    epochs_count = len(history.history['accuracy'])
+    for i in range(epochs_count):
+        f.write(
+            f"Epoch {i+1:03d}: "
+            f"Train Acc={history.history['accuracy'][i]:.4f}, "
+            f"Val Acc={history.history['val_accuracy'][i]:.4f}, "
+            f"Train Loss={history.history['loss'][i]:.4f}, "
+            f"Val Loss={history.history['val_loss'][i]:.4f}\n"
+        )
+print("Saved tuning results to:", tuner_results_path)
 
 print("✅ All done. Outputs are in folder:", OUT_DIR)

@@ -6,7 +6,8 @@ import sys
 from pathlib import Path
 from PIL import Image
 import keras_tuner as kt
-from sklearn.metrics import confusion_matrix, accuracy_score, precision_score, recall_score, f1_score
+from sklearn.metrics import confusion_matrix, accuracy_score, precision_score, recall_score, f1_score, classification_report
+from sklearn.model_selection import train_test_split
 import matplotlib.pyplot as plt
 import seaborn as sns
 
@@ -93,23 +94,38 @@ def create_datasets_with_batch_size(data_dir, batch_size, train_ratio=0.7, val_r
     all_files = venomous_files + non_venomous_files
     all_labels = [0] * len(venomous_files) + [1] * len(non_venomous_files)
 
-    indices = np.random.permutation(len(all_files))
-    all_files = [all_files[i] for i in indices]
-    all_labels = [all_labels[i] for i in indices]
+    train_files, temp_files, train_labels, temp_labels = train_test_split(
+        all_files,
+        all_labels,
+        test_size=(val_ratio + test_ratio),
+        stratify=all_labels,  
+        random_state=42
+    )
 
-    n = len(all_files)
-    n_train = int(n * train_ratio)
-    n_val = int(n * val_ratio)
+    relative_test_size = test_ratio / (val_ratio + test_ratio)
+    val_files, test_files, val_labels, test_labels = train_test_split(
+        temp_files,
+        temp_labels,
+        test_size=relative_test_size,
+        stratify=temp_labels,  
+        random_state=42
+    )
 
-    train_files = all_files[:n_train]
-    train_labels = all_labels[:n_train]
-    val_files = all_files[n_train:n_train + n_val]
-    val_labels = all_labels[n_train:n_train + n_val]
-    test_files = all_files[n_train + n_val:]
-    test_labels = all_labels[n_train + n_val:]
+    print(f"\n{'='*60}")
+    print("STRATIFIED DATASET SPLIT (Pre-stratifying before tf.data)")
+    print(f"{'='*60}")
+    print(f"Training set:   {len(train_files)} images")
+    print(f"  - Venomous:     {train_labels.count(0)} ({train_labels.count(0)/len(train_labels)*100:.1f}%)")
+    print(f"  - Non-Venomous: {train_labels.count(1)} ({train_labels.count(1)/len(train_labels)*100:.1f}%)")
+    print(f"\nValidation set: {len(val_files)} images")
+    print(f"  - Venomous:     {val_labels.count(0)} ({val_labels.count(0)/len(val_labels)*100:.1f}%)")
+    print(f"  - Non-Venomous: {val_labels.count(1)} ({val_labels.count(1)/len(val_labels)*100:.1f}%)")
+    print(f"\nTest set:       {len(test_files)} images")
+    print(f"  - Venomous:     {test_labels.count(0)} ({test_labels.count(0)/len(test_labels)*100:.1f}%)")
+    print(f"  - Non-Venomous: {test_labels.count(1)} ({test_labels.count(1)/len(test_labels)*100:.1f}%)")
+    print(f"{'='*60}\n")
 
-    print(f"Training: {len(train_files)}, Val: {len(val_files)}, Test: {len(test_files)}")
-
+    # Create tf.data.Dataset objects from pre-stratified subsets
     train_ds = tf.data.Dataset.from_tensor_slices((train_files, train_labels))
     val_ds = tf.data.Dataset.from_tensor_slices((val_files, val_labels))
     test_ds = tf.data.Dataset.from_tensor_slices((test_files, test_labels))
@@ -118,11 +134,36 @@ def create_datasets_with_batch_size(data_dir, batch_size, train_ratio=0.7, val_r
     val_ds = val_ds.map(preprocess_image, num_parallel_calls=tf.data.AUTOTUNE)
     test_ds = test_ds.map(preprocess_image, num_parallel_calls=tf.data.AUTOTUNE)
 
-    # Augmentation (only on training)
+    # Augmentation (applied only to training)
     def augment(image, label):
+        # Image is already (224,224,3) - channels last format for MobileNet
+        
+        # Random zoom between 0.7 and 1.0
+        zoom_factor = tf.random.uniform([], 0.7, 1.0)
+        h, w = IMG_SIZE[0], IMG_SIZE[1]
+        new_h = tf.cast(tf.cast(h, tf.float32) * zoom_factor, tf.int32)
+        new_w = tf.cast(tf.cast(w, tf.float32) * zoom_factor, tf.int32)
+        
+        # Resize to zoomed size then back to original size (crops center)
+        image = tf.image.resize(image, [new_h, new_w])
+        image = tf.image.resize_with_crop_or_pad(image, h, w)
+        
+        # Random rotation between -20 and +20 degrees
+        def rotate_image(img):
+            from scipy import ndimage
+            angle = np.random.uniform(-20.0, 20.0)
+            return ndimage.rotate(img, angle, reshape=False, mode='nearest')
+        
+        image = tf.py_function(
+            func=rotate_image,
+            inp=[image],
+            Tout=tf.float32
+        )
+        image.set_shape((224, 224, 3))
+        
+        # Other augmentations
         image = tf.image.random_flip_left_right(image)
-        image = tf.image.random_brightness(image, 0.1)
-        image = tf.image.random_contrast(image, 0.9, 1.1)
+        # Keep channels last format (224,224,3) for MobileNet
         return image, label
 
     train_ds = train_ds.map(augment, num_parallel_calls=tf.data.AUTOTUNE)
@@ -131,34 +172,51 @@ def create_datasets_with_batch_size(data_dir, batch_size, train_ratio=0.7, val_r
     val_ds = val_ds.batch(batch_size).prefetch(tf.data.AUTOTUNE)
     test_ds = test_ds.batch(batch_size).prefetch(tf.data.AUTOTUNE)
 
-    return train_ds, val_ds, test_ds
+    # Return split statistics for saving to txt
+    split_info = {
+        'total_images': len(all_files),
+        'total_venomous': len(venomous_files),
+        'total_non_venomous': len(non_venomous_files),
+        'train_total': len(train_files),
+        'train_venomous': train_labels.count(0),
+        'train_non_venomous': train_labels.count(1),
+        'val_total': len(val_files),
+        'val_venomous': val_labels.count(0),
+        'val_non_venomous': val_labels.count(1),
+        'test_total': len(test_files),
+        'test_venomous': test_labels.count(0),
+        'test_non_venomous': test_labels.count(1),
+        'train_ratio': train_ratio,
+        'val_ratio': val_ratio,
+        'test_ratio': test_ratio
+    }
+
+    return train_ds, val_ds, test_ds, split_info
 
 def create_datasets(data_dir, split_ratio=0.3):
-    return create_datasets_with_batch_size(
+    train_ds, val_ds, test_ds, split_info = create_datasets_with_batch_size(
         data_dir, BASE_BATCH_SIZE,
         train_ratio=1-split_ratio,
         val_ratio=split_ratio/2,
         test_ratio=split_ratio/2
     )
+    return train_ds, val_ds, test_ds, split_info
 
 # Build model for KerasTuner
 def build_model(hp):
     inputs = tf.keras.Input(shape=(IMG_SIZE[0], IMG_SIZE[1], 3), dtype=tf.float32)
 
-    # Hyperparams
-    base_trainable = hp.Choice("backbone_trainable", [False, True])  # try frozen or fine-tune
     dropout = hp.Float("dropout", min_value=0.0, max_value=0.5, step=0.1)
     lr = hp.Choice("learning_rate", [1e-5, 2e-5, 5e-5, 1e-4])
     opt_type = hp.Choice("optimizer", ["adam", "adamw"])
 
-    # MobileNetV3 backbone
     base_model = tf.keras.applications.MobileNetV3Large(
         include_top=False,
         weights='imagenet',
         input_tensor=inputs,
         pooling='avg'
     )
-    base_model.trainable = bool(base_trainable)
+    base_model.trainable = False
 
     x = base_model.output  # (batch, features)
     x = tf.keras.layers.Dropout(dropout)(x)
@@ -180,7 +238,7 @@ def build_model(hp):
 
 # Create datasets
 print("Creating datasets...")
-train_ds, val_ds, test_ds = create_datasets(DATASET_PATH)
+train_ds, val_ds, test_ds, split_info = create_datasets(DATASET_PATH)
 
 # KerasTuner setup
 tuner = kt.RandomSearch(
@@ -209,7 +267,7 @@ best_trial = tuner.oracle.get_best_trials(1)[0]
 best_score = best_trial.score if hasattr(best_trial, 'score') else None
 
 print(f"\nBest validation accuracy (tuner reported): {best_score}")
-print(f"Best LR: {best_hps.get('learning_rate')}, Optimizer: {best_hps.get('optimizer')}, Dropout: {best_hps.get('dropout')}, Backbone trainable: {best_hps.get('backbone_trainable')}")
+print(f"Best LR: {best_hps.get('learning_rate')}, Optimizer: {best_hps.get('optimizer')}, Dropout: {best_hps.get('dropout')}")
 
 # Create final model with best hps
 def create_final_model(hp):
@@ -220,7 +278,7 @@ def create_final_model(hp):
         input_tensor=inputs,
         pooling='avg'
     )
-    base_model.trainable = bool(hp.get("backbone_trainable"))
+    base_model.trainable = False  # Keep frozen as in tuning
     x = base_model.output
     x = tf.keras.layers.Dropout(hp.get("dropout"))(x)
     outputs = tf.keras.layers.Dense(NUM_CLASSES, activation='softmax')(x)
@@ -281,10 +339,24 @@ recall = recall_score(true_labels, predicted_labels, zero_division=0)
 f1 = f1_score(true_labels, predicted_labels, zero_division=0)
 conf_matrix = confusion_matrix(true_labels, predicted_labels)
 
-print(f"Accuracy: {accuracy:.4f}")
+# Classification report
+class_names = ['Venomous', 'Non-Venomous']
+report = classification_report(true_labels, predicted_labels, target_names=class_names, digits=4)
+
+print("\n" + "="*60)
+print("CLASSIFICATION REPORT (MobileNetV3Large)")
+print("="*60)
+print(report)
+print("\nConfusion Matrix:")
+print(conf_matrix)
+print("\n" + "="*60)
+print("SUMMARY METRICS")
+print("="*60)
+print(f"Accuracy:  {accuracy:.4f}")
 print(f"Precision: {precision:.4f}")
-print(f"Recall: {recall:.4f}")
-print(f"F1: {f1:.4f}")
+print(f"Recall:    {recall:.4f}")
+print(f"F1-Score:  {f1:.4f}")
+print("="*60)
 
 # Plot confusion matrix
 plt.figure(figsize=(6, 5))
@@ -321,21 +393,57 @@ plot_training(history)
 # Save results summary
 results_path = os.path.join(MOBILENET_DIR, 'tuning_results.txt')
 with open(results_path, "w") as f:
+    f.write("="*60 + "\n")
+    f.write("MOBILENETV3LARGE - SNAKE CLASSIFICATION RESULTS\n")
+    f.write("="*60 + "\n\n")
+    
     f.write("===== BEST HYPERPARAMETERS =====\n")
     f.write(f"Best Validation Accuracy (tuner): {best_score}\n")
     f.write(f"Learning Rate: {best_hps.get('learning_rate')}\n")
     f.write(f"Optimizer: {best_hps.get('optimizer')}\n")
     f.write(f"Dropout: {best_hps.get('dropout')}\n")
-    f.write(f"Backbone trainable: {best_hps.get('backbone_trainable')}\n\n")
+    f.write(f"Backbone: Frozen (trainable=False)\n\n")
+    
+    f.write("===== DATASET INFORMATION =====\n")
+    f.write(f"Dataset Path: {DATASET_PATH}\n")
+    f.write(f"Test Set Size: {len(true_labels)} images\n")
+    f.write(f"  - Venomous: {np.sum(true_labels == 0)}\n")
+    f.write(f"  - Non-Venomous: {np.sum(true_labels == 1)}\n\n")
+    
+    f.write("===== AUGMENTATION TECHNIQUES =====\n")
+    f.write("1. Random Zoom: 0.7-1.0 scale\n")
+    f.write("2. Random Rotation: -20° to +20°\n")
+    f.write("3. Random Horizontal Flip\n\n")
 
     f.write("===== FINAL EVALUATION ON TEST SET =====\n")
-    f.write(f"Test Accuracy: {accuracy:.4f}\n")
-    f.write(f"Test Precision: {precision:.4f}\n")
-    f.write(f"Test Recall: {recall:.4f}\n")
-    f.write(f"Test F1-Score: {f1:.4f}\n\n")
+    f.write(f"Test Accuracy: {accuracy:.4f} ({accuracy*100:.2f}%)\n")
+    f.write(f"Test Precision: {precision:.4f} ({precision*100:.2f}%)\n")
+    f.write(f"Test Recall: {recall:.4f} ({recall*100:.2f}%)\n")
+    f.write(f"Test F1-Score: {f1:.4f} ({f1*100:.2f}%)\n\n")
+    
+    f.write("="*60 + "\n")
+    f.write("CLASSIFICATION REPORT\n")
+    f.write("="*60 + "\n")
+    f.write(report + "\n")
 
-    f.write("===== CONFUSION MATRIX =====\n")
-    f.write(np.array2string(conf_matrix, separator=', ') + "\n\n")
+    f.write("\n" + "="*60 + "\n")
+    f.write("CONFUSION MATRIX\n")
+    f.write("="*60 + "\n")
+    f.write(f"                  Predicted\n")
+    f.write(f"              Venomous  Non-Venomous\n")
+    f.write(f"Actual\n")
+    f.write(f"Venomous         {conf_matrix[0][0]:3d}        {conf_matrix[0][1]:3d}\n")
+    f.write(f"Non-Venomous     {conf_matrix[1][0]:3d}        {conf_matrix[1][1]:3d}\n\n")
+    
+    f.write("="*60 + "\n")
+    f.write("INTERPRETATION\n")
+    f.write("="*60 + "\n")
+    f.write(f"True Positives (Venomous correctly identified): {conf_matrix[0][0]}\n")
+    f.write(f"True Negatives (Non-Venomous correctly identified): {conf_matrix[1][1]}\n")
+    f.write(f"False Positives (Non-Venomous misclassified as Venomous): {conf_matrix[1][0]}\n")
+    f.write(f"False Negatives (Venomous misclassified as Non-Venomous): {conf_matrix[0][1]}\n\n")
+    f.write(f"Total Correct Predictions: {conf_matrix[0][0] + conf_matrix[1][1]}/{len(true_labels)}\n")
+    f.write(f"Total Incorrect Predictions: {conf_matrix[0][1] + conf_matrix[1][0]}/{len(true_labels)}\n\n")
 
     f.write("===== TRAINING HISTORY =====\n")
     epochs_done = len(history.history['accuracy'])
