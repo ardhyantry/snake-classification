@@ -18,6 +18,8 @@ class _HomeScreenState extends State<HomeScreen> {
   String? _prediction;
   double? _confidence;
   bool _isLoading = false;
+  bool _isModelLoading = true;
+  String? _modelError;
   
   final ImagePicker _picker = ImagePicker();
   final SnakeClassifier _classifier = SnakeClassifier();
@@ -31,9 +33,21 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _initializeClassifier() async {
     try {
       await _classifier.loadModel();
+      if (mounted) {
+        setState(() {
+          _isModelLoading = false;
+          _modelError = null;
+        });
+      }
       print('Model loaded successfully');
     } catch (e) {
       print('Error loading model: $e');
+      if (mounted) {
+        setState(() {
+          _isModelLoading = false;
+          _modelError = e.toString();
+        });
+      }
     }
   }
 
@@ -194,6 +208,31 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Tampilkan loading indicator saat model sedang dimuat
+    if (_isModelLoading) {
+      return Scaffold(
+        backgroundColor: Colors.white,
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const CircularProgressIndicator(
+                color: Color(0xFF3D8B4E),
+              ),
+              const SizedBox(height: 20),
+              const Text(
+                'Memuat model AI...',
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Color(0xFF4A5F4A),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
       backgroundColor: Colors.white,
       body: SingleChildScrollView(
